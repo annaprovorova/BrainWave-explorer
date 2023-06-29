@@ -20,7 +20,6 @@ def fig_maker(window, data, time_start=8.6, time_finish=9.6):  # this should be 
    window.write_event_value('-THREAD-', 'done.')
    time.sleep(1)
    return fig
-
 '''функция для отрисовки графика, создание виджета'''
 def draw_figure(canvas, figure):
    tkcanvas = FigureCanvasTkAgg(figure, canvas)
