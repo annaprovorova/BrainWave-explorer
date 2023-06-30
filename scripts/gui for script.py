@@ -20,6 +20,7 @@ def fig_maker(window, data, time_start=8.6, time_finish=9.6):  # this should be 
    window.write_event_value('-THREAD-', 'done.')
    time.sleep(1)
    return fig
+
 '''функция для отрисовки графика, создание виджета'''
 def draw_figure(canvas, figure):
    tkcanvas = FigureCanvasTkAgg(figure, canvas)
@@ -217,8 +218,32 @@ if __name__ == '__main__':
             listOfFiles = os.listdir(path_eeg)
             #здесь можно ещё добавить пояснение, что это за сигнал, откуда
             #так работает быстрее - мы не загружаем сразу все данные,
-            eeg_signals = [file for file in listOfFiles if fnmatch.fnmatch(file, pattern)]
+            # нужные нам электроды Fp1, Fp2, F3,  F4, P3, P4, O1, O2
+            # если мы работаем с CSV, то они соответствуют номерам:
+            # EEG0, EEG1, EEG3, EEG4, EEG13, EEG14, EEG18, EEG19
+            electrods = [0, 1, 3, 4, 13, 14, 18, 19]
+
+            eeg_signals = [file for file in listOfFiles if (fnmatch.fnmatch(file, pattern) and (int(file[4:-4]) in electrods))]
+            data = {'EEG_0.csv': ['Fp1', 'лобный полюс, слева'],
+                    'EEG_1.csv': ['Fp2', 'лобный полюс, справа'],
+                    'EEG_3.csv': ['F3', 'фронтальная часть, слева (принятие решений?)'],
+                    'EEG_4.csv': ['F4', 'фронтальная часть, справа (принятие решений?)'],
+                    'EEG_13.csv': ['P3', 'задняя теменная (париетальная) часть, слева (запланированное движение)'],
+                    'EEG_14.csv': ['P4', 'задняя теменная (париетальная) часть, справа (запланированное движение)'],
+                    'EEG_18.csv': ['O1', 'затылочная (окципитальная) часть, слева (зрение)'],
+                    'EEG_19.csv': ['O2', 'затылочная (окципитальная) часть, справа (зрение)']}
+
+            #поэтому сразу подгружаем данные об электродах при выборе волонтёра, чтобы потом не обновлять их
+            # путь к файлу, где лежат данные по электродам path_eeg
+            for i in range(len(eeg_signals)):
+                f = open(f'{folder}/DATA/{values["-VOL-"]}/{eeg_signals[i]}')  # какой файл выбран
+                data[eeg_signals[i]].append( list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]))
+                eeg_signals[i] = f'{data[eeg_signals[i]][0]}, {data[eeg_signals[i]][1]}'
+
             window['-ELEC-'].update(disabled=False, values=eeg_signals)
+            dict_times = parse_files(path_time, path_type, path_answers)
+            timestamps = [f'{str(k)} : {"; ".join(v)}' for k, v in dict_times.items()]
+            window['-TIME-'].update(disabled=False, values=timestamps)
 
         if event == '-ELEC-':
             chosen_electrode = values['-ELEC-']
@@ -234,28 +259,48 @@ if __name__ == '__main__':
             window['-LEN-'].update(disabled=False, value=length)
             window['-PLOT-'].update(disabled=False)
         if event == '-PLOT-':
-            f = open(f'{folder}/DATA/{values["-VOL-"]}/{values["-ELEC-"]}')  # какой файл выбран
-            data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
-            m = values['-TIME-']
-            print(f)
-            if values['-START-'] == '':
-                a = 0
-            else:
-                a = int(float(values['-START-']) * RATE)
-            if values['-LEN-'] == '':
-                b = len(data[a:])
-            else:
+            #здесь мы рассматриваем случай, когда строим 8 графиков по нужным электродам
+            # или один, если хочется посмотреть конкретнее
+            if values["-ELEC-"] == '':
+
+                #временные метки
+                if values['-START-'] == '':
+                    a = 0
+                else:
+                    a = int(float(values['-START-']) * RATE)
                 b = a + int(float(values['-LEN-']) * RATE)
 
-            if fig_agg is not None:
-                delete_fig_agg(fig_agg)
-            d = data[a:b]
+                if fig_agg is not None:
+                    delete_fig_agg(fig_agg)
+                #теперь нам нужно достать данные по каждому электроду
+                data = []
+                for number in electrods:
+                    f = open(f'{folder}/DATA/{values["-VOL-"]}/EEG_{number}.csv')
+                    signal_data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
 
-            fig = fig_maker(window, d, a, b)
-            fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
-            window.Refresh()
-            window['-ADD-'].update(disabled=False)
-            window['-FFT-'].update(disabled=False)
+            else:
+                f = open(f'{folder}/DATA/{values["-VOL-"]}/{values["-ELEC-"]}')  # какой файл выбран
+                data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
+                m = values['-TIME-']
+                print(f)
+                if values['-START-'] == '':
+                    a = 0
+                else:
+                    a = int(float(values['-START-']) * RATE)
+                if values['-LEN-'] == '':
+                    b = len(data[a:])
+                else:
+                    b = a + int(float(values['-LEN-']) * RATE)
+
+                if fig_agg is not None:
+                    delete_fig_agg(fig_agg)
+                d = data[a:b]
+
+                fig = fig_maker(window, d, a, b)
+                fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+                window.Refresh()
+                window['-ADD-'].update(disabled=False)
+                window['-FFT-'].update(disabled=False)
             # нужен ли функционал, чтобы можно было потом выбрать, по какому промежутку строим?
         if event == '-ADD-': # может быть, убрать эту кнопку? сразу считать БПФ и писать в файл??
             final_data.append([values["-ELEC-"], values['-TIME-'], str(a / RATE).replace('.', ','), str(b / RATE).replace('.', ','), d])
