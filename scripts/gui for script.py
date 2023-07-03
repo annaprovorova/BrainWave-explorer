@@ -9,14 +9,38 @@ import time
 import os, fnmatch
 
 '''функция для обновления графика'''
-def fig_maker(window, data, time_start=8.6, time_finish=9.6):  # this should be called as a thread, then time.sleep() here would not freeze the GUI
+def fig_maker(window, data_one_channel, time_start=8.6, time_finish=9.6):  # this should be called as a thread, then time.sleep() here would not freeze the GUI
    global RATE
    t = np.arange(time_start/RATE, time_finish/RATE, 1 / RATE)
    fig = mplt.figure.Figure(figsize=(8, 4), dpi=100)
    ax = fig.add_subplot(1, 1, 1)
-   ax.plot(t, data)
+   ax.plot(t, data_one_channel)
    ax.set_xlabel("Время, сек")
    ax.set_ylabel("Амплитуда, миллиВольты")
+   window.write_event_value('-THREAD-', 'done.')
+   time.sleep(1)
+   return fig
+
+def fig_maker_multi(window, data, time_start=8.6, time_finish=9.6):  # this should be called as a thread, then time.sleep() here would not freeze the GUI
+   global RATE
+   t = np.arange(time_start / RATE, time_finish / RATE, 1 / RATE)
+
+   fig = mplt.figure.Figure(figsize=(8, 4), dpi=100)
+   gs = fig.add_gridspec(8, hspace=0)
+   axs = gs.subplots(sharex=True, sharey=True)
+   i = 0
+   for v in data.values():
+       axs[i].plot(t, v[-1][time_start:time_finish])
+       axs[i].set_ylabel(v[0],  rotation=0, fontweight='bold', color='orange')
+       axs[i].label_outer()
+       i += 1
+
+   # Hide x labels and tick labels for all but bottom plot.
+   # for ax in axs:
+   #     ax.label_outer()
+
+   #axs.set_xlabel("Время, сек")
+   #axs.set_ylabel("Амплитуда, миллиВольты")
    window.write_event_value('-THREAD-', 'done.')
    time.sleep(1)
    return fig
@@ -179,6 +203,9 @@ if __name__ == '__main__':
     t = []
     final_data = []
     m = 0
+    '''так как в PySimpleGUI нет функции проверки состояния объектов(WTF!!!),
+    то я завожу отдельную переменную как флажок, чтобы проверять, были ли уже подкгружены временные метки или нет'''
+    flag_timestamps = False
 
     '''отрисовка формы'''
     layout = [
@@ -205,11 +232,11 @@ if __name__ == '__main__':
         if event == '-FOLDER-':
             folder = values['-FOLDER-']
             path_vol = f'{folder}/DATA/'
-            #print(type(os.listdir(path_vol)))
             window['-VOL-'].update(disabled=False, values=os.listdir(path_vol))
             window['-ETC-'].update(disabled=False)
 
         if event == '-VOL-':
+            flag_timestamps = False
             path_time = f'{folder}/DATA/{values["-VOL-"]}/times.txt'
             path_type = f'{folder}/DATA/{values["-VOL-"]}/order.txt'
             path_answers = f'{folder}/DATA/{values["-VOL-"]}/first.txt'
@@ -247,9 +274,11 @@ if __name__ == '__main__':
 
         if event == '-ELEC-':
             chosen_electrode = values['-ELEC-']
-            dict_times = parse_files(path_time,path_type,path_answers)
-            timestamps = [f'{str(k)} : {"; ".join(v)}' for k, v in dict_times.items()]
-            window['-TIME-'].update(disabled=False, values=timestamps)
+            if not flag_timestamps:
+                # dict_times = parse_files(path_time,path_type,path_answers)
+                # timestamps = [f'{str(k)} : {"; ".join(v)}' for k, v in dict_times.items()]
+                # window['-TIME-'].update(disabled=False, values=timestamps)
+                flag_timestamps = True
 
         if event == '-TIME-':
             stamp = float(values['-TIME-'].split(':')[0])
@@ -273,15 +302,13 @@ if __name__ == '__main__':
                 if fig_agg is not None:
                     delete_fig_agg(fig_agg)
                 #теперь нам нужно достать данные по каждому электроду
-                # data = []
-                # for number in electrods:
-                #     f = open(f'{folder}/DATA/{values["-VOL-"]}/EEG_{number}.csv')
-                #     signal_data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
+
                 if fig_agg is not None:
                     delete_fig_agg(fig_agg)
-                d = data[a:b]
+                #!!!!!!
+                #d = data[a:b]
 
-                fig = fig_maker(window, d, a, b)
+                fig = fig_maker_multi(window, data, a, b)
                 fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                 window.Refresh()
                 window['-ADD-'].update(disabled=False)
