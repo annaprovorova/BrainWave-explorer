@@ -32,15 +32,10 @@ def fig_maker_multi(window, data, time_start=8.6, time_finish=9.6):  # this shou
    for v in data.values():
        axs[i].plot(t, v[-1][time_start:time_finish])
        axs[i].set_ylabel(v[0],  rotation=0, fontweight='bold', color='orange')
-       axs[i].label_outer()
+       axs[i].label_outer()    # Hide x labels and tick labels for all but bottom plot
        i += 1
 
-   # Hide x labels and tick labels for all but bottom plot.
-   # for ax in axs:
-   #     ax.label_outer()
 
-   #axs.set_xlabel("Время, сек")
-   #axs.set_ylabel("Амплитуда, миллиВольты")
    window.write_event_value('-THREAD-', 'done.')
    time.sleep(1)
    return fig
@@ -111,9 +106,10 @@ def parse_files(path_time, path_type, path_answers):
 
 """
 ЗДЕСЬ БУДЕМ ФОРМИРОВАТЬ 3 ФАЙЛА С ИНФОРМАЦИЕЙ о:
-- готовности платить за каждый из образцов шоколада в слепой дегустации
-- оценках стоймости образца в слепой дегустации
 - вкусовых оценках образца в слепой дегустации
+- оценках схожести напитка с оригинальной кока-колой 
+- готовности платить за каждый из образцов колы в слепой дегустации
+- оценках стоимости образца в слепой дегустации
 """
 def WTP_price_taste(folder):
     string_structure = {
@@ -128,65 +124,87 @@ def WTP_price_taste(folder):
     first_line = "NAME; cola1; cola2; cola_zero1; cola_zero2; d_cola1; d_cola2; d_zero1; d_zero2; funky1; funky2; chernogolovka1; chernogolovka2\n"
     with open(f'{folder}/results/taste.csv', "w") as text_file:
         text_file.write(first_line)
+    with open(f'{folder}/results/similar.csv', "w") as text_file:
+        text_file.write(first_line)
     with open(f'{folder}/results/WTP.csv', "w") as text_file:
         text_file.write(first_line)
     with open(f'{folder}/results/price.csv', "w") as text_file:
         text_file.write(first_line)
     vol_nameS = os.listdir(path_vol)
     for vol_name in vol_nameS:
-
         path_to_volunteer_data = folder
-
         WTP_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        Taste_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        Price_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        line_WTP = ''
-        line_Taste = ''
-        line_Price = ''
+        taste_array  = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        price_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        sim_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
 
         file1 = open(f'{path_to_volunteer_data}/DATA/{vol_name}/first.txt', 'r', encoding='utf-8')
-
+        file1.readline()
         file_order = open(f'{path_to_volunteer_data}/DATA/{vol_name}/order.txt', 'r', encoding='utf-8')
-        Lines_about_order = file_order.readlines()
+        lines_about_order = file_order.readlines()
 
-        # Strips the newline character
-        for line in Lines_about_order:
-            current_cola = line.strip()
+        for line in lines_about_order:
+            current_cola = line.strip() # Strips the newline character
             if WTP_array[string_structure[current_cola][0]] == 'NA':
                 file1.readline()
-                Taste_array[string_structure[current_cola][0]] = (file1.readline()[:-1])
+                taste_array [string_structure[current_cola][0]] = file1.readline().strip()
                 file1.readline()
-                WTP_array[string_structure[current_cola][0]] = (file1.readline()[:-2])
+                sim_array [string_structure[current_cola][0]] = file1.readline().strip()
                 file1.readline()
-                Price_array[string_structure[current_cola][0]] = (file1.readline()[:-2])
+                WTP_array[string_structure[current_cola][0]] = file1.readline().replace('|', '').strip()
+                file1.readline()
+                price_array[string_structure[current_cola][0]] = file1.readline().replace('|', '').strip()
             else:
                 file1.readline()
-                Taste_array[string_structure[current_cola][1]] = (file1.readline()[:-1])
+                taste_array [string_structure[current_cola][1]] = file1.readline().strip()
                 file1.readline()
-                WTP_array[string_structure[current_cola][1]] = (file1.readline()[:-2])
+                sim_array [string_structure[current_cola][1]] = file1.readline().strip()
                 file1.readline()
-                Price_array[string_structure[current_cola][1]] = (file1.readline()[:-2])
+                WTP_array[string_structure[current_cola][1]] = file1.readline().replace('|', '').strip()
+                file1.readline()
+                price_array[string_structure[current_cola][1]] = file1.readline().replace('|', '').strip()
 
         file1.close()
         file_order.close()
 
-        for count in range(13):
-            line_WTP = line_WTP + WTP_array[count] + ';'
-            line_Taste = line_Taste + Taste_array[count] + ';'
-            line_Price = line_Price + Price_array[count] + ';'
 
-        line_WTP = line_WTP + '\n'
-        line_Taste = line_Taste + '\n'
-        line_Price = line_Price + '\n'
+        line_WTP = ';'.join(WTP_array) +  '\n'
+        line_taste = ';'.join(taste_array) +  '\n'
+        line_price = ';'.join(price_array) +  '\n'
+        line_sim = ';'.join(sim_array) +  '\n'
 
         with open(f'{folder}/results/taste.csv', "a") as text_file:
-            text_file.write(line_Taste)
+            text_file.write(line_taste)
+
+        with open(f'{folder}/results/similar.csv', "a") as text_file:
+            text_file.write(line_sim)
 
         with open(f'{folder}/results/WTP.csv', "a") as text_file:
             text_file.write(line_WTP)
 
         with open(f'{folder}/results/price.csv', "a") as text_file:
-            text_file.write(line_Price)
+            text_file.write(line_price)
+
+
+'''функция для экспорта данных по WTP, оценке вкуса и цены'''
+def export_wtp_etc(folder, WTP_array, taste_array, price_array):
+    for count in range(13):
+        line_WTP = line_WTP + WTP_array[count] + ';'
+        line_taste = line_taste + taste_array[count] + ';'
+        line_price = line_price + price_array[count] + ';'
+
+    line_WTP = line_WTP + '\n'
+    line_taste = line_taste + '\n'
+    line_price = line_price + '\n'
+
+    with open(f'{folder}/results/taste.csv', "a") as text_file:
+        text_file.write(line_taste)
+
+    with open(f'{folder}/results/WTP.csv', "a") as text_file:
+        text_file.write(line_WTP)
+
+    with open(f'{folder}/results/price.csv', "a") as text_file:
+        text_file.write(line_price)
 
 
 if __name__ == '__main__':
