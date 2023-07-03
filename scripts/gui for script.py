@@ -236,10 +236,10 @@ if __name__ == '__main__':
             #поэтому сразу подгружаем данные об электродах при выборе волонтёра, чтобы потом не обновлять их
             # путь к файлу, где лежат данные по электродам path_eeg
             for i in range(len(eeg_signals)):
-                f = open(f'{folder}/DATA/{values["-VOL-"]}/{eeg_signals[i]}')  # какой файл выбран
-                data[eeg_signals[i]].append( list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]))
-                eeg_signals[i] = f'{data[eeg_signals[i]][0]}, {data[eeg_signals[i]][1]}'
-
+                with open(f'{folder}/DATA/{values["-VOL-"]}/{eeg_signals[i]}') as f: # какой файл выбран
+                    data[eeg_signals[i]].append( list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]))
+                    eeg_signals[i] = f'{data[eeg_signals[i]][0]}, {data[eeg_signals[i]][1]}, {eeg_signals[i]}'
+            eeg_signals.append('все каналы')
             window['-ELEC-'].update(disabled=False, values=eeg_signals)
             dict_times = parse_files(path_time, path_type, path_answers)
             timestamps = [f'{str(k)} : {"; ".join(v)}' for k, v in dict_times.items()]
@@ -261,7 +261,7 @@ if __name__ == '__main__':
         if event == '-PLOT-':
             #здесь мы рассматриваем случай, когда строим 8 графиков по нужным электродам
             # или один, если хочется посмотреть конкретнее
-            if values["-ELEC-"] == '':
+            if values["-ELEC-"] == '' or values["-ELEC-"] == 'все каналы':
 
                 #временные метки
                 if values['-START-'] == '':
@@ -273,14 +273,24 @@ if __name__ == '__main__':
                 if fig_agg is not None:
                     delete_fig_agg(fig_agg)
                 #теперь нам нужно достать данные по каждому электроду
-                data = []
-                for number in electrods:
-                    f = open(f'{folder}/DATA/{values["-VOL-"]}/EEG_{number}.csv')
-                    signal_data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
+                # data = []
+                # for number in electrods:
+                #     f = open(f'{folder}/DATA/{values["-VOL-"]}/EEG_{number}.csv')
+                #     signal_data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
+                if fig_agg is not None:
+                    delete_fig_agg(fig_agg)
+                d = data[a:b]
+
+                fig = fig_maker(window, d, a, b)
+                fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+                window.Refresh()
+                window['-ADD-'].update(disabled=False)
+                window['-FFT-'].update(disabled=False)
 
             else:
-                f = open(f'{folder}/DATA/{values["-VOL-"]}/{values["-ELEC-"]}')  # какой файл выбран
-                data = list([float(i.replace(',', '.')) * 1e-6 for i in list(csv.reader(f, delimiter=';'))[0]]) #данные ЭЭГ с конкретного электрода
+                file_csv = values["-ELEC-"].split(', ')[-1]
+                data_for_one_plot = data[file_csv][-1]
+
                 m = values['-TIME-']
                 print(f)
                 if values['-START-'] == '':
@@ -294,13 +304,13 @@ if __name__ == '__main__':
 
                 if fig_agg is not None:
                     delete_fig_agg(fig_agg)
-                d = data[a:b]
+                d = data_for_one_plot[a:b]
 
                 fig = fig_maker(window, d, a, b)
                 fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                 window.Refresh()
-                window['-ADD-'].update(disabled=False)
-                window['-FFT-'].update(disabled=False)
+                # window['-ADD-'].update(disabled=False)
+                # window['-FFT-'].update(disabled=False)
             # нужен ли функционал, чтобы можно было потом выбрать, по какому промежутку строим?
         if event == '-ADD-': # может быть, убрать эту кнопку? сразу считать БПФ и писать в файл??
             final_data.append([values["-ELEC-"], values['-TIME-'], str(a / RATE).replace('.', ','), str(b / RATE).replace('.', ','), d])
