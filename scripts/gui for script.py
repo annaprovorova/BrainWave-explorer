@@ -58,7 +58,7 @@ def delete_fig_agg(fig_agg):
 def calc_fft(data, time_start, time_finish):
     global RATE
     yf = np.abs(rfft(data))**2
-    print(time_start, time_finish)
+    #print(time_start, time_finish)
     time_for_axes = np.arange(time_start, time_finish, 1/RATE)
     xf = rfftfreq(len(time_for_axes), 1/RATE)
     # debug print(len(xf), time_finish, time_start)
@@ -113,30 +113,23 @@ def parse_files(path_time, path_type, path_answers):
 """
 def WTP_price_taste(folder):
     string_structure = {
-        "cola": [1, 2],
-        "cola_zero": [3, 4],
-        "d_cola": [5, 6],
-        "d_zero": [7, 8],
-        "funky": [9, 10],
-        "chernogolovka": [11, 12]
+        "cola": [0, 1],
+        "cola_zero": [2, 3],
+        "d_cola": [4, 5],
+        "d_zero": [6, 7],
+        "funky": [8, 9],
+        "chernogolovka": [10, 11]
     }
-
-    first_line = "NAME; cola1; cola2; cola_zero1; cola_zero2; d_cola1; d_cola2; d_zero1; d_zero2; funky1; funky2; chernogolovka1; chernogolovka2\n"
-    with open(f'{folder}/results/taste.csv', "w") as text_file:
-        text_file.write(first_line)
-    with open(f'{folder}/results/similar.csv', "w") as text_file:
-        text_file.write(first_line)
-    with open(f'{folder}/results/WTP.csv', "w") as text_file:
-        text_file.write(first_line)
-    with open(f'{folder}/results/price.csv', "w") as text_file:
-        text_file.write(first_line)
+    path_vol = f'{folder}/DATA/'
     vol_nameS = os.listdir(path_vol)
+    parsed_results = dict.fromkeys(vol_nameS)
+
     for vol_name in vol_nameS:
         path_to_volunteer_data = folder
-        WTP_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        taste_array  = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        price_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        sim_array = [vol_name, 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        WTP_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        taste_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        price_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        sim_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
 
         file1 = open(f'{path_to_volunteer_data}/DATA/{vol_name}/first.txt', 'r', encoding='utf-8')
         file1.readline()
@@ -147,64 +140,60 @@ def WTP_price_taste(folder):
             current_cola = line.strip() # Strips the newline character
             if WTP_array[string_structure[current_cola][0]] == 'NA':
                 file1.readline()
-                taste_array [string_structure[current_cola][0]] = file1.readline().strip()
+                taste_array[string_structure[current_cola][0]] = file1.readline().strip()
                 file1.readline()
-                sim_array [string_structure[current_cola][0]] = file1.readline().strip()
+                sim_array[string_structure[current_cola][0]] = file1.readline().strip()
                 file1.readline()
                 WTP_array[string_structure[current_cola][0]] = file1.readline().replace('|', '').strip()
                 file1.readline()
                 price_array[string_structure[current_cola][0]] = file1.readline().replace('|', '').strip()
             else:
                 file1.readline()
-                taste_array [string_structure[current_cola][1]] = file1.readline().strip()
+                print(string_structure[current_cola], current_cola)
+                taste_array[string_structure[current_cola][1]] = file1.readline().strip()
                 file1.readline()
-                sim_array [string_structure[current_cola][1]] = file1.readline().strip()
+                sim_array[string_structure[current_cola][1]] = file1.readline().strip()
                 file1.readline()
                 WTP_array[string_structure[current_cola][1]] = file1.readline().replace('|', '').strip()
                 file1.readline()
                 price_array[string_structure[current_cola][1]] = file1.readline().replace('|', '').strip()
-
+        parsed_results[vol_name] = [taste_array, sim_array, WTP_array, price_array]
         file1.close()
         file_order.close()
 
-
-        line_WTP = ';'.join(WTP_array) +  '\n'
-        line_taste = ';'.join(taste_array) +  '\n'
-        line_price = ';'.join(price_array) +  '\n'
-        line_sim = ';'.join(sim_array) +  '\n'
-
-        with open(f'{folder}/results/taste.csv', "a") as text_file:
-            text_file.write(line_taste)
-
-        with open(f'{folder}/results/similar.csv', "a") as text_file:
-            text_file.write(line_sim)
-
-        with open(f'{folder}/results/WTP.csv', "a") as text_file:
-            text_file.write(line_WTP)
-
-        with open(f'{folder}/results/price.csv', "a") as text_file:
-            text_file.write(line_price)
+    return parsed_results
 
 
 '''функция для экспорта данных по WTP, оценке вкуса и цены'''
-def export_wtp_etc(folder, WTP_array, taste_array, price_array):
-    for count in range(13):
-        line_WTP = line_WTP + WTP_array[count] + ';'
-        line_taste = line_taste + taste_array[count] + ';'
-        line_price = line_price + price_array[count] + ';'
+def export_wtp_etc(folder, parsed_results):
 
-    line_WTP = line_WTP + '\n'
-    line_taste = line_taste + '\n'
-    line_price = line_price + '\n'
+    first_line = "NAME; cola1; cola2; cola_zero1; cola_zero2; d_cola1; d_cola2; d_zero1; d_zero2; funky1; funky2; chernogolovka1; chernogolovka2;\n"
+    taste_file =  open(f'{folder}/results/taste.csv', "w")
+    sim_file = open(f'{folder}/results/similar.csv', "w")
+    WTP_file = open(f'{folder}/results/WTP.csv', "w")
+    price_file = open(f'{folder}/results/price.csv', "w")
+    taste_file.write(first_line)
+    sim_file.write(first_line)
+    WTP_file.write(first_line)
+    price_file.write(first_line)
 
-    with open(f'{folder}/results/taste.csv', "a") as text_file:
-        text_file.write(line_taste)
+    for name, values in parsed_results.items():
+        taste_array, sim_array, WTP_array, price_array = values
 
-    with open(f'{folder}/results/WTP.csv', "a") as text_file:
-        text_file.write(line_WTP)
+        line_taste = name + ';' + ';'.join(taste_array) + '\n'
+        line_sim = name + ';' + ';'.join(sim_array) + '\n'
+        line_WTP = name + ';' + ';'.join(WTP_array) + '\n'
+        line_price = name + ';' + ';'.join(price_array) + '\n'
 
-    with open(f'{folder}/results/price.csv', "a") as text_file:
-        text_file.write(line_price)
+        taste_file.write(line_taste)
+        sim_file.write(line_sim)
+        WTP_file.write(line_WTP)
+        price_file.write(line_price)
+
+    taste_file.close()
+    sim_file.close()
+    WTP_file.close()
+    price_file.close()
 
 
 if __name__ == '__main__':
@@ -219,7 +208,7 @@ if __name__ == '__main__':
     fig_agg = None
     files = []
     t = []
-    final_data = []
+    final_data = {} #словарь, со словарями?? в котором будут храниться результаты
     m = 0
     '''так как в PySimpleGUI нет функции проверки состояния объектов(WTF!!!),
     то я завожу отдельную переменную как флажок, чтобы проверять, были ли уже подкгружены временные метки или нет'''
@@ -236,7 +225,10 @@ if __name__ == '__main__':
          sg.Text('Продолжительность (сек)'), sg.InputText(key='-LEN-', disabled=True)],
         [sg.Submit('Построить график', key='-PLOT-', disabled=True)],
         [sg.Canvas(key='-CANVAS-')],
-        [sg.Button('Добавить отрезок для анализа', key='-ADD-', disabled=True), sg.Button('Рассчитать БПФ', key='-FFT-', disabled=True), sg.Button('Выгрузить ключевые показатели', key='-ETC-', disabled=True)]
+        [sg.Button('Добавить отрезок', key='-SEG-', disabled=True),
+         sg.Button('Сохранить данные по волонтёру', key='-ADD-', disabled=True),
+         sg.Button('Выгрузить таблицу', key='-FFT-', disabled=True),
+         sg.Button('Выгрузить WTP etc', key='-ETC-', disabled=True)]
     ]
 
     window = sg.Window('FFT for EEG', layout, finalize=True, size=(815, 650), font=('Arial', 12), resizable=True)
@@ -251,6 +243,16 @@ if __name__ == '__main__':
             folder = values['-FOLDER-']
             path_vol = f'{folder}/DATA/'
             window['-VOL-'].update(disabled=False, values=os.listdir(path_vol))
+
+            #сразу подгружаем данные обо всех испытуемых в специальный словарик
+            #должны быть подготовлены данные об этом
+            with open(f'{folder}/data_about_volunteers.csv', encoding='windows-1251') as f:
+                f.readline()
+                for row in f:
+                    row = row.strip().split(';')
+                    final_data[row[0]] = row[1:]
+            #ещё сразу спарсим информацию о WTP, оценке вкуса и цены. Если нужно, их можно выгрузить отдельно
+            parsed_wtp_etc = WTP_price_taste(folder)
             window['-ETC-'].update(disabled=False)
 
         if event == '-VOL-':
@@ -290,6 +292,19 @@ if __name__ == '__main__':
             timestamps = [f'{str(k)} : {"; ".join(v)}' for k, v in dict_times.items()]
             window['-TIME-'].update(disabled=False, values=timestamps)
 
+
+
+            #словарик, в который будут сохранены все данные по этому волотёру для рассчёта FFT
+            #можно использовать, чтобы сбросить данные о респонденте
+            pre_data = {
+                "cola": [[], []],
+                "cola_zero": [[], []],
+                "d_cola": [[], []],
+                "d_zero": [[], []],
+                "funky": [[], []],
+                "chernogolovka": [[], []]
+            }
+
         if event == '-ELEC-':
             chosen_electrode = values['-ELEC-']
             if not flag_timestamps:
@@ -323,12 +338,11 @@ if __name__ == '__main__':
 
                 if fig_agg is not None:
                     delete_fig_agg(fig_agg)
-                #!!!!!!
-                #d = data[a:b]
 
                 fig = fig_maker_multi(window, data, a, b)
                 fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                 window.Refresh()
+                window['-SEG-'].update(disabled=False)
                 window['-ADD-'].update(disabled=False)
                 window['-FFT-'].update(disabled=False)
 
@@ -337,7 +351,6 @@ if __name__ == '__main__':
                 data_for_one_plot = data[file_csv][-1]
 
                 m = values['-TIME-']
-                print(f)
                 if values['-START-'] == '':
                     a = 0
                 else:
@@ -354,30 +367,60 @@ if __name__ == '__main__':
                 fig = fig_maker(window, d, a, b)
                 fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                 window.Refresh()
-                # window['-ADD-'].update(disabled=False)
-                # window['-FFT-'].update(disabled=False)
+                window['-SEG-'].update(disabled=False)
+                window['-ADD-'].update(disabled=False)
+                window['-FFT-'].update(disabled=False)
             # нужен ли функционал, чтобы можно было потом выбрать, по какому промежутку строим?
-        if event == '-ADD-': # может быть, убрать эту кнопку? сразу считать БПФ и писать в файл??
-            final_data.append([values["-ELEC-"], values['-TIME-'], str(a / RATE).replace('.', ','), str(b / RATE).replace('.', ','), d])
-            sg.popup("Данные сохранены")
-            print(len(d))  # debug
 
+        if event == '-SEG-':
+            type = values['-TIME-'].split('; ')[1].strip()
+            start = float(values['-START-'].replace(',', '.'))
+            finish = start + float(values['-LEN-'].replace(',', '.'))
+            line_eeg = []
+            for v in data.values():
+                freqs = [str(i).replace('.', ',') for i in calc_fft(v[-1], start, finish)]
+                line_eeg.extend(freqs[:2])
+            if pre_data[type][0] == []:
+                pre_data[type][0].extend(line_eeg)
+            else:
+                pre_data[type][1].extend(line_eeg)
+            #print(pre_data)
+        if event == '-ADD-':
+            volunteer = values['-VOL-']
+            print(volunteer)
+            for k in final_data.keys():
+                if final_data[k][0] == volunteer:
+                    final_data[k].append(pre_data)
+                    break
+            sg.popup("Данные сохранены")
+            print(final_data)
 
         if event == '-FFT-':
             path_result=f'{folder}/results/'
             with open(
                     f'{path_result}/result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
-                    'w', newline='') as csv_result:
-                res = csv.writer(csv_result, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-                res.writerow(
-                    ['Электрод', 'Номер метки', 'Время', 'Продолжительность', 'Альфа', 'Бета', 'Гамма', 'Дельта',
-                     'Тета'])
-                for row in final_data:
-                    freqs = [str(i).replace('.', ',') for i in calc_fft(row[-1], float(row[-3].replace(',', '.')), float(row[-2].replace(',', '.')))]
-                    res.writerow(row[:-1] + freqs)
-                sg.popup("Файл сохранён в папку")
+                    'w') as csv_result:
+
+                print(';'.join(['ID', 'Age', 'Sex', 'Brand',
+                     'Fp1-alpha', 'Fp1-beta',
+                     'Fp2-alpha', 'Fp2-beta',
+                     'F3 -alpha', 'F3 -beta',
+                     'F4 -alpha', 'F4 -beta',
+                     'P3 -alpha', 'P3 -beta',
+                     'P4 -alpha', 'P4 -beta',
+                     'O3 -alpha', 'O3 - beta',
+                     'O4 -alpha', 'O4 -beta',
+                     'FP12_alpha', 'FP12_beta',
+                     'F34_alpha', 'F34_beta']), file=csv_result)
+                for k, v in final_data.items():
+                    print(v)
+                    for k2, v2 in v[-1].items():
+                        print(';'.join([k, v[1], v[2], k2] + v2[0]))
+                        print(';'.join([k, v[1], v[2], k2] + v2[0]), file=csv_result)
+                        print(';'.join([k, v[1], v[2], k2] + v2[1]), file=csv_result)
+            sg.popup("Файл сохранён в папку")
         if event == '-ETC-':
-            WTP_price_taste(folder)
+            export_wtp_etc(folder, parsed_wtp_etc)
             sg.popup("Файл сохранён в папку results")
     window.close()
 
