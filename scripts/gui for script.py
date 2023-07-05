@@ -88,20 +88,24 @@ def calc_fft(data, time_start, time_finish):
 
 
 '''функция для парсинга меток времени, вида шоколада и ответов'''
-def parse_files(path_time, path_type, path_answers):
+def parse_files(path_time, path_type):
     parsed_time = dict() #словарь, в котором ключами будут метки времени, а значениями то, что происходит
     time_file = open(path_time, encoding="utf-8")
-    ans_file = open(path_answers, encoding="utf-8")
     type_file = open(path_type, encoding="utf-8")
     #    parsed_time = {float(row): [] for row in time_file}
-    parsed_time[float(time_file.readline().split()[1])] = ['начало эксперимента']
+    time_file.readline()
     for i in range(12):
-        parsed_time[float(time_file.readline().split()[1])] = ['проба', type_file.readline()]
-        parsed_time[float(time_file.readline().split()[1])] = ['сигнал перед питьём воды']
-    for i in range(6):
-        parsed_time[float(time_file.readline().split()[1])] = ['просмотр изображения']
-        parsed_time[float(time_file.readline().split()[1])] = ['первый глоток']
-        parsed_time[float(time_file.readline().split()[1])] = ['сигнал перед питьём воды']
+        label = float(time_file.readline().split()[1])
+        next_label = float(time_file.readline().split()[1])
+        parsed_time[label] = [type_file.readline(), next_label-label]
+
+
+    # for i in range(6):
+    #     parsed_time[float(time_file.readline().split()[1])] = ['просмотр изображения']
+    #     parsed_time[float(time_file.readline().split()[1])] = ['первый глоток']
+    #     parsed_time[float(time_file.readline().split()[1])] = ['сигнал перед питьём воды']
+    time_file.close()
+    type_file.close()
     return parsed_time
 
 """
@@ -288,11 +292,9 @@ if __name__ == '__main__':
                     eeg_signals[i] = f'{data[eeg_signals[i]][0]}, {data[eeg_signals[i]][1]}, {eeg_signals[i]}'
             eeg_signals.append('все каналы')
             window['-ELEC-'].update(disabled=False, values=eeg_signals)
-            dict_times = parse_files(path_time, path_type, path_answers)
-            timestamps = [f'{str(k)} : {"; ".join(v)}' for k, v in dict_times.items()]
+            dict_times = parse_files(path_time, path_type)
+            timestamps = [f'{str(k)} : {v[0]}' for k, v in dict_times.items()]
             window['-TIME-'].update(disabled=False, values=timestamps)
-
-
 
             #словарик, в который будут сохранены все данные по этому волотёру для рассчёта FFT
             #можно использовать, чтобы сбросить данные о респонденте
@@ -317,7 +319,7 @@ if __name__ == '__main__':
             stamp = float(values['-TIME-'].split(':')[0])
             #print(stamp)
             window['-START-'].update(disabled=False, value=stamp)
-            length = len(dict_times.keys())
+            length = int(dict_times[stamp][1])
             window['-LEN-'].update(disabled=False, value=length)
             window['-PLOT-'].update(disabled=False)
         if event == '-PLOT-':
@@ -373,12 +375,12 @@ if __name__ == '__main__':
             # нужен ли функционал, чтобы можно было потом выбрать, по какому промежутку строим?
 
         if event == '-SEG-':
-            type = values['-TIME-'].split('; ')[1].strip()
+            type = values['-TIME-'].split(': ')[1].strip()
             start = float(values['-START-'].replace(',', '.'))
             finish = start + float(values['-LEN-'].replace(',', '.'))
             line_eeg = []
             for v in data.values():
-                freqs = [str(i).replace('.', ',') for i in calc_fft(v[-1], start, finish)]
+                freqs = [str(i).replace('.', ',') for i in calc_fft(v[-1], start, finish)] #v[-1] - это данные сигнала
                 line_eeg.extend(freqs[:2])
             if pre_data[type][0] == []:
                 pre_data[type][0].extend(line_eeg)
@@ -393,7 +395,8 @@ if __name__ == '__main__':
                     final_data[k].append(pre_data)
                     break
             sg.popup("Данные сохранены")
-            print(final_data)
+            for k, v in final_data.items():
+                print(k, v)
 
         if event == '-FFT-':
             path_result=f'{folder}/results/'
@@ -402,6 +405,7 @@ if __name__ == '__main__':
                     'w') as csv_result:
 
                 print(';'.join(['ID', 'Age', 'Sex', 'Brand',
+                     'taste', 'similarity', 'WTP', 'price',
                      'Fp1-alpha', 'Fp1-beta',
                      'Fp2-alpha', 'Fp2-beta',
                      'F3 -alpha', 'F3 -beta',
@@ -412,12 +416,12 @@ if __name__ == '__main__':
                      'O4 -alpha', 'O4 -beta',
                      'FP12_alpha', 'FP12_beta',
                      'F34_alpha', 'F34_beta']), file=csv_result)
-                for k, v in final_data.items():
-                    print(v)
-                    for k2, v2 in v[-1].items():
-                        print(';'.join([k, v[1], v[2], k2] + v2[0]))
-                        print(';'.join([k, v[1], v[2], k2] + v2[0]), file=csv_result)
-                        print(';'.join([k, v[1], v[2], k2] + v2[1]), file=csv_result)
+                for id, values in final_data.items():
+
+                    for brand, fft_results in values[-1].items():
+                        #print(';'.join([id, v[1], v[2], k2] + v2[0]))
+                        print(';'.join([id, values[1], values[2], brand] + fft_results[0]), file=csv_result)
+                        print(';'.join([id, values[1], values[2], brand] + fft_results[1]), file=csv_result)
             sg.popup("Файл сохранён в папку")
         if event == '-ETC-':
             export_wtp_etc(folder, parsed_wtp_etc)
