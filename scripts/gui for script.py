@@ -496,7 +496,7 @@ if __name__ == '__main__':
                 for id, values in final_data.items():
                     name = values[0]
                     for brand, fft_results in values[-1].items():
-                        print(parsed_wtp_etc)
+
                         print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
                                         parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
                                         parsed_wtp_etc[name]['price'][brand]] + fft_results))
