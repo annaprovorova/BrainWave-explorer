@@ -92,76 +92,137 @@ def parse_files(path_time, path_type):
     parsed_time = dict() #словарь, в котором ключами будут метки времени, а значениями то, что происходит
     time_file = open(path_time, encoding="utf-8")
     type_file = open(path_type, encoding="utf-8")
-    #    parsed_time = {float(row): [] for row in time_file}
-    time_file.readline()
+    # в изначальном файлике все данные повторяются по 2 раза.
+    # нам удобнее ввести уникальные значения, например, cola1 и cola2
+    # поэтому мы заводим множество, с помощью которого будем проверять, встречался ли нам уже такой бренд
+    brand_check = set()
+
+    time_file.readline() #пропускаем строку в файле с началом эксперимента
+
     for i in range(12):
         label = float(time_file.readline().split()[1])
         next_label = float(time_file.readline().split()[1])
-        parsed_time[label] = [type_file.readline(), next_label-label]
+        cola_type = type_file.readline().strip()
+        if cola_type in brand_check:
+            parsed_time[label] = [cola_type + '2', next_label-label]
+        else:
+            parsed_time[label] = [cola_type + '1', next_label - label]
+            brand_check.add(cola_type)
 
-
+    #если для анализа нужны данные в открытую, то нужно разкомментировать этот кусочек
     # for i in range(6):
     #     parsed_time[float(time_file.readline().split()[1])] = ['просмотр изображения']
     #     parsed_time[float(time_file.readline().split()[1])] = ['первый глоток']
     #     parsed_time[float(time_file.readline().split()[1])] = ['сигнал перед питьём воды']
+
     time_file.close()
     type_file.close()
     return parsed_time
 
 """
-ЗДЕСЬ БУДЕМ ФОРМИРОВАТЬ 3 ФАЙЛА С ИНФОРМАЦИЕЙ о:
+ЗДЕСЬ БУДЕМ ФОРМИРОВАТЬ 4 ФАЙЛА С ИНФОРМАЦИЕЙ о:
 - вкусовых оценках образца в слепой дегустации
 - оценках схожести напитка с оригинальной кока-колой 
 - готовности платить за каждый из образцов колы в слепой дегустации
 - оценках стоимости образца в слепой дегустации
 """
 def WTP_price_taste(folder):
-    string_structure = {
-        "cola": [0, 1],
-        "cola_zero": [2, 3],
-        "d_cola": [4, 5],
-        "d_zero": [6, 7],
-        "funky": [8, 9],
-        "chernogolovka": [10, 11]
-    }
+
     path_vol = f'{folder}/DATA/'
     vol_nameS = os.listdir(path_vol)
     parsed_results = dict.fromkeys(vol_nameS)
 
     for vol_name in vol_nameS:
         path_to_volunteer_data = folder
-        WTP_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        taste_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        price_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
-        sim_array = ['NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA', 'NA']
+        WTP_dict = {
+                "cola1": [],
+                "cola2": [],
+                "cola_zero1": [],
+                "cola_zero2": [],
+                "d_cola1": [],
+                "d_cola2": [],
+                "d_zero1": [],
+                "d_zero2": [],
+                "funky1": [],
+                "funky2": [],
+                "chernogolovka1": [],
+                "chernogolovka2": []
+            }
+        taste_dict = {
+                "cola1": [],
+                "cola2": [],
+                "cola_zero1": [],
+                "cola_zero2": [],
+                "d_cola1": [],
+                "d_cola2": [],
+                "d_zero1": [],
+                "d_zero2": [],
+                "funky1": [],
+                "funky2": [],
+                "chernogolovka1": [],
+                "chernogolovka2": []
+            }
+        price_dict = {
+                "cola1": [],
+                "cola2": [],
+                "cola_zero1": [],
+                "cola_zero2": [],
+                "d_cola1": [],
+                "d_cola2": [],
+                "d_zero1": [],
+                "d_zero2": [],
+                "funky1": [],
+                "funky2": [],
+                "chernogolovka1": [],
+                "chernogolovka2": []
+            }
+        sim_dict = {
+                "cola1": [],
+                "cola2": [],
+                "cola_zero1": [],
+                "cola_zero2": [],
+                "d_cola1": [],
+                "d_cola2": [],
+                "d_zero1": [],
+                "d_zero2": [],
+                "funky1": [],
+                "funky2": [],
+                "chernogolovka1": [],
+                "chernogolovka2": []
+            }
 
         file1 = open(f'{path_to_volunteer_data}/DATA/{vol_name}/first.txt', 'r', encoding='utf-8')
         file1.readline()
         file_order = open(f'{path_to_volunteer_data}/DATA/{vol_name}/order.txt', 'r', encoding='utf-8')
         lines_about_order = file_order.readlines()
 
+        # аналогично функции parsed_files, вводим множество для проверки это первая или вторая проба колы
+        brand_check = set()
+
         for line in lines_about_order:
+
             current_cola = line.strip() # Strips the newline character
-            if WTP_array[string_structure[current_cola][0]] == 'NA':
-                file1.readline()
-                taste_array[string_structure[current_cola][0]] = file1.readline().strip()
-                file1.readline()
-                sim_array[string_structure[current_cola][0]] = file1.readline().strip()
-                file1.readline()
-                WTP_array[string_structure[current_cola][0]] = file1.readline().replace('|', '').strip()
-                file1.readline()
-                price_array[string_structure[current_cola][0]] = file1.readline().replace('|', '').strip()
+            if current_cola in brand_check:
+                current_cola = current_cola + '2'
             else:
-                file1.readline()
-                print(string_structure[current_cola], current_cola)
-                taste_array[string_structure[current_cola][1]] = file1.readline().strip()
-                file1.readline()
-                sim_array[string_structure[current_cola][1]] = file1.readline().strip()
-                file1.readline()
-                WTP_array[string_structure[current_cola][1]] = file1.readline().replace('|', '').strip()
-                file1.readline()
-                price_array[string_structure[current_cola][1]] = file1.readline().replace('|', '').strip()
-        parsed_results[vol_name] = [taste_array, sim_array, WTP_array, price_array]
+                brand_check.add(current_cola)
+                current_cola = current_cola + '1'
+
+            file1.readline()
+            taste_dict[current_cola] = file1.readline().strip()
+            file1.readline()
+            sim_dict[current_cola] = file1.readline().strip()
+            file1.readline()
+            WTP_dict[current_cola] = file1.readline().strip().replace('|', '').strip()
+            file1.readline()
+            price_dict[current_cola] = file1.readline().strip().replace('|', '').strip()
+
+        parsed_results[vol_name] = {
+            'taste': taste_dict,
+            'similarity': sim_dict,
+            'WTP': WTP_dict,
+            'price': price_dict
+        }
         file1.close()
         file_order.close()
 
@@ -172,7 +233,7 @@ def WTP_price_taste(folder):
 def export_wtp_etc(folder, parsed_results):
 
     first_line = "NAME; cola1; cola2; cola_zero1; cola_zero2; d_cola1; d_cola2; d_zero1; d_zero2; funky1; funky2; chernogolovka1; chernogolovka2;\n"
-    taste_file =  open(f'{folder}/results/taste.csv', "w")
+    taste_file = open(f'{folder}/results/taste.csv', "w")
     sim_file = open(f'{folder}/results/similar.csv', "w")
     WTP_file = open(f'{folder}/results/WTP.csv', "w")
     price_file = open(f'{folder}/results/price.csv', "w")
@@ -181,13 +242,27 @@ def export_wtp_etc(folder, parsed_results):
     WTP_file.write(first_line)
     price_file.write(first_line)
 
-    for name, values in parsed_results.items():
-        taste_array, sim_array, WTP_array, price_array = values
+    for name in parsed_results.keys():
+        taste_dict = parsed_results[name]['taste']
+        sim_dict = parsed_results[name]['similarity']
+        WTP_dict = parsed_results[name]['WTP']
+        price_dict = parsed_results[name]['price']
 
-        line_taste = name + ';' + ';'.join(taste_array) + '\n'
-        line_sim = name + ';' + ';'.join(sim_array) + '\n'
-        line_WTP = name + ';' + ';'.join(WTP_array) + '\n'
-        line_price = name + ';' + ';'.join(price_array) + '\n'
+        line_taste = name
+        line_sim = name
+        line_WTP = name
+        line_price = name
+
+        for brand in taste_dict.keys():
+            line_taste += ';' + taste_dict[brand]
+            line_sim += ';' + sim_dict[brand]
+            line_WTP += ';' + WTP_dict[brand]
+            line_price += ';' + price_dict[brand]
+
+        line_taste += '\n'
+        line_sim += '\n'
+        line_WTP += '\n'
+        line_price += '\n'
 
         taste_file.write(line_taste)
         sim_file.write(line_sim)
@@ -299,12 +374,18 @@ if __name__ == '__main__':
             #словарик, в который будут сохранены все данные по этому волотёру для рассчёта FFT
             #можно использовать, чтобы сбросить данные о респонденте
             pre_data = {
-                "cola": [[], []],
-                "cola_zero": [[], []],
-                "d_cola": [[], []],
-                "d_zero": [[], []],
-                "funky": [[], []],
-                "chernogolovka": [[], []]
+                "cola1": [],
+                "cola2": [],
+                "cola_zero1": [],
+                "cola_zero2": [],
+                "d_cola1": [],
+                "d_cola2": [],
+                "d_zero1": [],
+                "d_zero2": [],
+                "funky1": [],
+                "funky2": [],
+                "chernogolovka1": [],
+                "chernogolovka2": []
             }
 
         if event == '-ELEC-':
@@ -382,11 +463,8 @@ if __name__ == '__main__':
             for v in data.values():
                 freqs = [str(i).replace('.', ',') for i in calc_fft(v[-1], start, finish)] #v[-1] - это данные сигнала
                 line_eeg.extend(freqs[:2])
-            if pre_data[type][0] == []:
-                pre_data[type][0].extend(line_eeg)
-            else:
-                pre_data[type][1].extend(line_eeg)
-            #print(pre_data)
+            pre_data[type].extend(line_eeg)
+
         if event == '-ADD-':
             volunteer = values['-VOL-']
             print(volunteer)
@@ -408,20 +486,24 @@ if __name__ == '__main__':
                      'taste', 'similarity', 'WTP', 'price',
                      'Fp1-alpha', 'Fp1-beta',
                      'Fp2-alpha', 'Fp2-beta',
-                     'F3 -alpha', 'F3 -beta',
-                     'F4 -alpha', 'F4 -beta',
-                     'P3 -alpha', 'P3 -beta',
-                     'P4 -alpha', 'P4 -beta',
-                     'O3 -alpha', 'O3 - beta',
-                     'O4 -alpha', 'O4 -beta',
-                     'FP12_alpha', 'FP12_beta',
-                     'F34_alpha', 'F34_beta']), file=csv_result)
+                     'F3-alpha', 'F3 -beta',
+                     'F4-alpha', 'F4 -beta',
+                     'P3-alpha', 'P3 -beta',
+                     'P4-alpha', 'P4 -beta',
+                     'O3-alpha', 'O3 - beta',
+                     'O4-alpha', 'O4 -beta'
+                        ]), file=csv_result)
                 for id, values in final_data.items():
-
+                    name = values[0]
                     for brand, fft_results in values[-1].items():
-                        #print(';'.join([id, v[1], v[2], k2] + v2[0]))
-                        print(';'.join([id, values[1], values[2], brand] + fft_results[0]), file=csv_result)
-                        print(';'.join([id, values[1], values[2], brand] + fft_results[1]), file=csv_result)
+                        print(parsed_wtp_etc)
+                        print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
+                                        parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
+                                        parsed_wtp_etc[name]['price'][brand]] + fft_results))
+                        print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
+                                        parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
+                                        parsed_wtp_etc[name]['price'][brand]] + fft_results), file=csv_result)
+
             sg.popup("Файл сохранён в папку")
         if event == '-ETC-':
             export_wtp_etc(folder, parsed_wtp_etc)
