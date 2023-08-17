@@ -98,6 +98,7 @@ def parse_files(path_time, path_type):
     brand_check = set()
 
     time_file.readline() #пропускаем строку в файле с началом эксперимента
+    #times = time_file.readlines()
 
     for i in range(12):
         label = float(time_file.readline().split()[1])
@@ -456,55 +457,72 @@ if __name__ == '__main__':
             # нужен ли функционал, чтобы можно было потом выбрать, по какому промежутку строим?
 
         if event == '-SEG-':
-            type = values['-TIME-'].split(': ')[1].strip()
-            start = float(values['-START-'].replace(',', '.'))
-            finish = start + float(values['-LEN-'].replace(',', '.'))
-            line_eeg = []
-            for v in data.values():
-                freqs = [str(i).replace('.', ',') for i in calc_fft(v[-1], start, finish)] #v[-1] - это данные сигнала
-                line_eeg.extend(freqs[:2])
-            pre_data[type].extend(line_eeg)
+            print(values['-TIME-'])
+            if values['-TIME-'] == '':
+                print(1)
+                sg.popup('Выберите временной отрезок')
+            else:
+                type = values['-TIME-'].split(': ')[1].strip()
+                start = float(values['-START-'].replace(',', '.'))
+                finish = start + float(values['-LEN-'].replace(',', '.'))
+                line_eeg = []
+                for v in data.values():
+                    freqs = [str(i).replace('.', ',') for i in calc_fft(v[-1], start, finish)] #v[-1] - это данные сигнала
+                    line_eeg.extend(freqs[:2])
+                pre_data[type].extend(line_eeg)
 
         if event == '-ADD-':
             volunteer = values['-VOL-']
-            print(volunteer)
+            #print(volunteer)
             for k in final_data.keys():
                 if final_data[k][0] == volunteer:
                     final_data[k].append(pre_data)
                     break
             sg.popup("Данные сохранены")
-            for k, v in final_data.items():
-                print(k, v)
+            '''for k, v in final_data.items():
+                print(k, v)'''
 
         if event == '-FFT-':
-            path_result=f'{folder}/results/'
-            with open(
-                    f'{path_result}/result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
-                    'w') as csv_result:
+            unused = []
+            for k, v in final_data.items():
+                print(k, v)
+                if not isinstance(v[-1], dict):
+                    unused.append(k)
+            print(unused)
+            print(final_data)
+            if len(unused) > 0:
+                unused = [final_data[k][0] for k in unused]
+                sg.popup("Невозможно выгрузить данные, нет информации по волонтёр(ам):\n", '\n'.join(unused))
+            else:
+                path_result=f'{folder}/results/'
+                with open(
+                        f'{path_result}/result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                        'w') as csv_result:
 
-                print(';'.join(['ID', 'Age', 'Sex', 'Brand',
-                     'taste', 'similarity', 'WTP', 'price',
-                     'Fp1-alpha', 'Fp1-beta',
-                     'Fp2-alpha', 'Fp2-beta',
-                     'F3-alpha', 'F3 -beta',
-                     'F4-alpha', 'F4 -beta',
-                     'P3-alpha', 'P3 -beta',
-                     'P4-alpha', 'P4 -beta',
-                     'O3-alpha', 'O3 - beta',
-                     'O4-alpha', 'O4 -beta'
-                        ]), file=csv_result)
-                for id, values in final_data.items():
-                    name = values[0]
-                    for brand, fft_results in values[-1].items():
+                    print(';'.join(['ID', 'Age', 'Sex', 'Brand',
+                         'taste', 'similarity', 'WTP', 'price',
+                         'Fp1-alpha', 'Fp1-beta',
+                         'Fp2-alpha', 'Fp2-beta',
+                         'F3-alpha', 'F3 -beta',
+                         'F4-alpha', 'F4 -beta',
+                         'P3-alpha', 'P3 -beta',
+                         'P4-alpha', 'P4 -beta',
+                         'O3-alpha', 'O3 - beta',
+                         'O4-alpha', 'O4 -beta'
+                            ]), file=csv_result)
+                    for id, values in final_data.items():
+                        name = values[0]
+                        #print(values)
+                        for brand, fft_results in values[-1].items():
 
-                        print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
-                                        parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
-                                        parsed_wtp_etc[name]['price'][brand]] + fft_results))
-                        print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
-                                        parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
-                                        parsed_wtp_etc[name]['price'][brand]] + fft_results), file=csv_result)
+                            '''print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
+                                            parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
+                                            parsed_wtp_etc[name]['price'][brand]] + fft_results))'''
+                            print(';'.join([id, values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
+                                            parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
+                                            parsed_wtp_etc[name]['price'][brand]] + fft_results), file=csv_result)
 
-            sg.popup("Файл сохранён в папку")
+                sg.popup("Файл сохранён в папку")
         if event == '-ETC-':
             export_wtp_etc(folder, parsed_wtp_etc)
             sg.popup("Файл сохранён в папку results")
