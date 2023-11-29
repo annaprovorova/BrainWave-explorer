@@ -5,7 +5,7 @@ import PySimpleGUI as sg
 в этом файле находятся функции для парсинга данных в единую отчётную таблицу по результатам эксперимента
 '''
 
-def parse_files(path_time, path_type, cola_order=[]):
+def parse_files(path_time, path_type, order=[]):
     '''
     функция для парсинга меток времени, вида колы и ответов
 
@@ -41,7 +41,7 @@ def parse_files(path_time, path_type, cola_order=[]):
 
     time_file.readline()  # пропускаем строку в файле, питьё воды после закрытого эксперимента
     #теперь время для данных в открытую
-    cola_order = ['cola',
+    order = ['cola',
                       'chernogolovka',
                       'cola_zero',
                       'd_cola',
@@ -50,7 +50,7 @@ def parse_files(path_time, path_type, cola_order=[]):
     for i in range(6):
         label = float(time_file.readline().split()[-1])
         next_label = float(time_file.readline().split()[-1])
-        parsed_time_open[label] = [cola_order[i], next_label-label]
+        parsed_time_open[label] = [order[i], next_label-label]
 
     time_file.close()
     type_file.close()

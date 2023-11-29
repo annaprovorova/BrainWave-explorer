@@ -197,7 +197,7 @@ def ica_preproc_last_5_sec(path, RATE):
     return data
 
 
-def ica_preproc_open_5_sec(path, RATE, cola_order=[]):
+def ica_preproc_open_5_sec(path, RATE, order=[]):
     '''
     Функция для выгрузки отчёта по эксперименту в открытую, берём с -6 по -1 секунды перед сигналом о завершении ответов на вопросы
     :param path: str, путь к папке с данными
@@ -211,7 +211,7 @@ def ica_preproc_open_5_sec(path, RATE, cola_order=[]):
         print(vol)
         path_time = fr'{path}\DATA\{vol}\times.txt'
         # path_type = f'{path}\DATA\{vol}\order.txt'
-        cola_times = time_range(path_time, type='open', order=cola_order)
+        cola_times = time_range(path_time, type='open', order=order)
         print(cola_times)
         cola_types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
@@ -307,7 +307,7 @@ if __name__ == "__main__":
     #
     # window.close()
 
-    cola_order = ['cola',
+    order = ['cola',
                   'chernogolovka',
                   'cola_zero',
                   'd_cola',
@@ -318,7 +318,7 @@ if __name__ == "__main__":
     # print(d)
 
 
-    d_open = ica_preproc_open_5_sec(r'C:\Users\Анна\Desktop\EEG_Analysis\CC Masha\Experiment — копия', 500, cola_order=cola_order)
+    d_open = ica_preproc_open_5_sec(r'C:\Users\Анна\Desktop\EEG_Analysis\CC Masha\Experiment — копия', 500, order=order)
     print(d_open)
 
     # raw = mne.io.read_raw_edf(fr"C:\Users\Анна\Desktop\EEG_Analysis\COCA COLA\DATA\Быкова\Быкова.edf", preload=True)
