@@ -32,7 +32,7 @@ if __name__ == '__main__':
     '''так как в PySimpleGUI нет функции проверки состояния объектов(WTF!!!),
     то я завожу отдельную переменную как флажок, чтобы проверять, были ли уже подкгружены временные метки или нет'''
     flag_timestamps = False
-    cola_order = ['cola',
+    order = ['cola',
                   'funky',
                   'd_cola',
                   'cola_zero',
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             raw = mne.io.read_raw_edf(path_edf, preload=True)
             raw.apply_function(lambda x: x * 1e-6)  # переводим в милливольты
             dict_times_closed, dict_times_open = parse_files(path_time,
-                                                             path_type, cola_order=cola_order)  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                                             path_type, order=order)  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             ch_names = ['EEG Fp1',
                         'EEG Fp2',
                         'EEG F3',
@@ -168,7 +168,7 @@ if __name__ == '__main__':
                 window['-PLOT-'].update(disabled=True)
                 timestamps = [f'{str(k)} : {v[0]}' for k, v in dict_times_open.items()]
                 window['-TIME-'].update(disabled=False, values=timestamps)
-                parsed_wtp_etc = WTP_price_taste(folder, type='open', order=cola_order)
+                parsed_wtp_etc = WTP_price_taste(folder, type='open', order=order)
 
                 # pre_data = {
                 #     'cola':[],
@@ -178,7 +178,7 @@ if __name__ == '__main__':
                 #     'd_zero':[],
                 #     'funky':[]
                 # }
-                pre_data = dict.fromkeys(cola_order, [])
+                pre_data = dict.fromkeys(order, [])
                 dict_times = dict_times_open
 
         if event == '-ELEC-':
@@ -294,7 +294,10 @@ if __name__ == '__main__':
                 unused = [final_data[k][0] for k in unused]
                 sg.popup("Невозможно выгрузить данные, нет информации по волонтёру/ам):\n", '\n'.join(unused))
             else:
+
                 path_result=f'{folder}/results/'
+                if not os.path.exists(path_result):
+                    os.mkdir(path_result)
                 with open(
                         f'{path_result}/result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                         'w') as csv_result:
@@ -329,10 +332,12 @@ if __name__ == '__main__':
             '''выгрузка общего отчёт + применение ICA'''
             data_ica = ica_preproc_first_5_sec(folder, RATE)
             for k in final_data.keys():
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
+                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                 final_data[k].append(data_ica[final_data[k][0]])
 
             path_result = f'{folder}/results/'
+            if not os.path.exists(path_result):
+                os.mkdir(path_result)
             with open(
                     f'{path_result}/clear_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
@@ -368,7 +373,7 @@ if __name__ == '__main__':
             '''выгрузка общего отчёт + применение ICA'''
             data_ica = ica_preproc_last_5_sec(folder, RATE)
             for k in final_data.keys():
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
+                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                 final_data[k].append(data_ica[final_data[k][0]])
 
             path_result = f'{folder}/results/'
@@ -405,11 +410,11 @@ if __name__ == '__main__':
 
         if event == '-OPEN-':
             '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту + применение ICA'''
-            data_ica = ica_preproc_open_5_sec(folder, RATE, cola_order=cola_order)
+            data_ica = ica_preproc_open_5_sec(folder, RATE, order=order)
             for k in final_data.keys():
-                print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
+                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                 final_data[k].append(data_ica[final_data[k][0]])
-            print(parsed_wtp_etc)
+            # print(parsed_wtp_etc)
             path_result = f'{folder}/results/'
             with open(
                     f'{path_result}/clear_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
@@ -437,7 +442,7 @@ if __name__ == '__main__':
                     name = values[0]
 
                     for brand, fft_results in values[-1].items():
-                        print(brand)
+                        # print(brand)
                         print(';'.join([id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste_stated'][brand],
                                         parsed_wtp_etc[name]['taste_revealed'][brand], parsed_wtp_etc[name]['price'][brand],
                                         parsed_wtp_etc[name]['WTP'][brand], fft_results]), file=csv_result)
