@@ -197,6 +197,73 @@ def ica_preproc_last_5_sec(path, RATE):
     return data
 
 
+def no_ica_last_5_sec(path, RATE):
+    '''
+    функция считает разложение на альфа и бета волны без применения ICA
+    :param path: str, путь к папке с данными
+    :return: data: dict, словарь, ключ - фамилия волонтёра, значение - словарь по типам кока-колы
+    '''
+    path_vol = fr'{path}\DATA'
+    data = {}
+    cola_types = {}
+    cola_times = {}
+    for vol in os.listdir(path_vol):
+        path_time = fr'{path}\DATA\{vol}\times.txt'
+        path_type = f'{path}\DATA\{vol}\order.txt'
+        cola_times = time_range(path_time, type='close', path_type=path_type)
+        cola_types = {}
+        raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
+        raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
+        ch_names = ['EEG Fp1',
+                    'EEG Fp2',
+                    'EEG F3',
+                    'EEG F4',
+                    'EEG P3',
+                    'EEG P4',
+                    'EEG O1',
+                    'EEG O2',
+                    ]
+        raw.pick(ch_names)
+
+        cola_times = dict(sorted(cola_times.items()))
+        for cola in cola_times:
+            sec = raw.copy()
+
+            sec.crop(tmin=cola_times[cola][0], tmax=cola_times[cola][1])
+            cola_types[cola] = []
+
+            ch_AB = {}
+
+            # выбор отрезков, по которым считаем FFT
+            # пока без обобщения, у меня считается просто с -10 по -5
+            n_sec = sec.get_data().shape[1]// RATE
+            time_start = n_sec - 10
+            time_finish = n_sec - 5
+            # print(sec.get_data().shape, cola_times)
+            # print(n_sec, time_start, time_finish)
+            for ch_name, channel in zip(ch_names, sec.get_data()):
+                # print(channel.shape)
+                tmp = calc_fft(channel, RATE, time_start=time_start, time_finish=time_finish)
+                ch_AB[ch_name[4:] + '_a_1'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_1'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+1, time_finish=time_finish+1)
+                ch_AB[ch_name[4:] + '_a_2'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_2'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+2, time_finish=time_finish+2)
+                ch_AB[ch_name[4:] + '_a_3'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_3'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+3, time_finish=time_finish+3)
+                ch_AB[ch_name[4:] + '_a_4'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_4'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+4, time_finish=time_finish+4)
+                ch_AB[ch_name[4:] + '_a_5'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_5'] = tmp[1]
+            ch_AB = dict(sorted(ch_AB.items()))
+            cola_types[cola] = ';'.join(ch_AB.values()).replace('.', ',')
+        data[vol] = cola_types
+    return data
+
+
 def ica_preproc_open_5_sec(path, RATE, order=[]):
     '''
     Функция для выгрузки отчёта по эксперименту в открытую, берём с -6 по -1 секунды перед сигналом о завершении ответов на вопросы
@@ -248,6 +315,77 @@ def ica_preproc_open_5_sec(path, RATE, order=[]):
 
             # выбор отрезков, по которым считаем FFT
             # пока без обобщения, у меня считается просто с -10 по -5
+            n_sec = sec.get_data().shape[1]// RATE
+            time_start = n_sec - 10
+            time_finish = n_sec - 5
+            # print(sec.get_data().shape, cola_times)
+            # print(n_sec, time_start, time_finish)
+            for ch_name, channel in zip(ch_names, sec.get_data()):
+                # print(channel.shape)
+                tmp = calc_fft(channel, RATE, time_start=time_start, time_finish=time_finish)
+                ch_AB[ch_name[4:] + '_a_1'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_1'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+1, time_finish=time_finish+1)
+                ch_AB[ch_name[4:] + '_a_2'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_2'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+2, time_finish=time_finish+2)
+                ch_AB[ch_name[4:] + '_a_3'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_3'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+3, time_finish=time_finish+3)
+                ch_AB[ch_name[4:] + '_a_4'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_4'] = tmp[1]
+                tmp = calc_fft(channel, RATE, time_start=time_start+4, time_finish=time_finish+4)
+                ch_AB[ch_name[4:] + '_a_5'] = tmp[0]
+                ch_AB[ch_name[4:] + '_b_5'] = tmp[1]
+            ch_AB = dict(sorted(ch_AB.items()))
+            cola_types[cola] = ';'.join(ch_AB.values()).replace('.', ',')
+        data[vol] = cola_types
+    return data
+
+
+def no_ica_open_5_sec(path, RATE, order=[]):
+    '''
+    Функция для выгрузки отчёта по эксперименту в открытую, берём с -6 по -1 секунды перед сигналом о завершении ответов на вопросы
+    БЕЗ ICA преобразования
+    :param path: str, путь к папке с данными
+    :return: data: dict, словарь, ключ - фамилия волонтёра, значение - словарь по типам кока-колы
+    '''
+    path_vol = fr'{path}\DATA'
+    data = {}
+    cola_types = {}
+    cola_times = {}
+    for vol in os.listdir(path_vol):
+        print(vol)
+        path_time = fr'{path}\DATA\{vol}\times.txt'
+        # path_type = f'{path}\DATA\{vol}\order.txt'
+        print(vol)
+        cola_times = time_range(path_time, type='open', order=order)
+        print(cola_times)
+        cola_types = {}
+        raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
+        raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
+        ch_names = ['EEG Fp1',
+                    'EEG Fp2',
+                    'EEG F3',
+                    'EEG F4',
+                    'EEG P3',
+                    'EEG P4',
+                    'EEG O1',
+                    'EEG O2',
+                    ]
+        raw.pick(ch_names)
+
+        cola_times = dict(sorted(cola_times.items()))
+        for cola in cola_times:
+            sec = raw.copy()
+
+            sec.crop(tmin=cola_times[cola][0], tmax=cola_times[cola][1])
+            cola_types[cola] = []
+
+            ch_AB = {}
+
+            # выбор отрезков, по которым считаем FFT
+            # пока без обобщения, у меня считается просто с -6 по -1
             n_sec = sec.get_data().shape[1]// RATE
             time_start = n_sec - 10
             time_finish = n_sec - 5

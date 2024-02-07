@@ -41,6 +41,29 @@ def fig_maker_multi(window, RATE, data, time_start=8, time_finish=9):  # this sh
    time.sleep(1)
    return fig
 
+def fig_maker_ica(window, RATE, data, time_start=8, time_finish=9):  # this should be called as a thread, then time.sleep() here would not freeze the GUI
+   '''
+   функция, для отрисовки ОДНОГО СИГНАЛА сразу двух графиков: самого сигнала и сигнала после ica
+   :param window:
+   :param RATE: 500, количество считываний в секунду
+   :param data: dict, в нём -1 значение - сгнал после ica, -2 - сам сигнал
+   :param time_start: int - время начала временной шкалы
+   :param time_finish: int - точка окнчания временной шкалы
+   :return: None
+   '''
+   t = np.arange(time_start / RATE, time_finish / RATE, 1 / RATE)
+   fig = mplt.figure.Figure(figsize=(8, 4), dpi=100)
+   ax = fig.add_subplot(1, 1, 1)
+   ax.plot(t, data[-2][int(time_start):int(time_finish)])
+   ax.plot(t, data[-1][:-1], color='darkorange')
+   ax.set_xlabel("Время, сек")
+   ax.set_ylabel("Амплитуда, миллиВольты")
+   window.write_event_value('-THREAD-', 'done.')
+   time.sleep(1)
+   return fig
+
+
+
 def fig_maker_multi_ica(window, RATE, data, time_start=8, time_finish=9):  # this should be called as a thread, then time.sleep() here would not freeze the GUI
    '''
    функция, для отрисовки сразу двух графиков: самого сигнала и сигнала после ica
@@ -58,6 +81,8 @@ def fig_maker_multi_ica(window, RATE, data, time_start=8, time_finish=9):  # thi
    axs = gs.subplots(sharex=True, sharey=True)
    i = 0
    for k, v in data.items():
+       print(len(t), len(v[-2]), len(v[-1]))
+       print(time_start, time_finish, v[-2][int(time_start):int(time_finish)])
        axs[i].plot(t, v[-2][int(time_start):int(time_finish)])
        axs[i].plot(t, v[-1][:-1], color='darkorange')
        axs[i].set_ylabel(k[4:],  rotation=0, fontweight='bold', color='orange')

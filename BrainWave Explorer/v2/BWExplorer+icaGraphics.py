@@ -3,9 +3,10 @@ import time
 import os
 import mne
 from mne.preprocessing import ICA
+import copy
 
-from GUIgraphics import fig_maker, fig_maker_multi_ica, draw_figure, delete_fig_agg
-from Analyse import calc_fft, ica_preproc_first_5_sec, ica_preproc_last_5_sec, ica_preproc_open_5_sec
+from GUIgraphics import fig_maker_ica, fig_maker_multi_ica, draw_figure, delete_fig_agg
+from Analyse import calc_fft, ica_preproc_first_5_sec, ica_preproc_last_5_sec, ica_preproc_open_5_sec, no_ica_last_5_sec, no_ica_open_5_sec
 from parse import parse_files, WTP_price_taste, export_wtp_etc
 
 '''
@@ -48,16 +49,18 @@ if __name__ == '__main__':
         [sg.Text('Выберите временную метку'), timestamps_combo],
         [sg.Text('Начало временного отрезка'), sg.InputText(key='-START-', size=(10, 10), disabled=True),
          sg.Text('Продолжительность (сек)'), sg.InputText(key='-LEN-', disabled=True)],
-        [sg.Submit('Отчёт (закр, 5 сек в начале)', key='-REPS-', disabled=True), sg.Submit('Отчёт(закр, 5 сек в конце, закр)', key='-REPF-', disabled=True)],
-        [sg.Submit('Отчёт (откр, 5 сек в конце)', key='-OPEN-', disabled=True)],
         [sg.Submit('Построить график', key='-PLOT-', disabled=True)],
-        [sg.Canvas(key='-CANVAS-')],]
-        # [sg.Button('Добавить отрезок', key='-SEG-', disabled=True),
-        #  sg.Button('Сохранить данные по волонтёру', key='-ADD-', disabled=True),
-        #  sg.Button('Выгрузить таблицу', key='-FFT-', disabled=True),
-        #  sg.Button('Выгрузить WTP etc', key='-ETC-', disabled=True)]
-    # ]
+        [sg.Canvas(key='-CANVAS-')],
+        [sg.Button('Добавить отрезок', key='-SEG-', disabled=False),
+         sg.Button('Сохранить данные по волонтёру', key='-ADD-', disabled=False),
+         sg.Button('Выгрузить отчёт', key='-FFT-', disabled=False)],
+        [sg.Submit('Отчёт (закр, 5 сек в начале)', key='-REPS-', disabled=True), sg.Submit('Отчёт(закр, 5 сек в конце, закр)', key='-REPF-', disabled=True),
+        sg.Submit('Отчёт (откр, 5 сек в конце)', key='-OPEN-', disabled=True)],
+        [sg.Submit('Закр, 5ск, нефильтр', key='-NOFILTCLOSE-', disabled=True), sg.Submit('Откр, 5сек, нефильтр', key='-NOFILTOPEN-', disabled=True)]
 
+    ]
+    # sg.Button('Выгрузить таблицу', key='-FFT-', disabled=True),
+    # sg.Button('Выгрузить WTP etc', key='-ETC-', disabled=True)
 
     window = sg.Window('FFT for EEG', layout, finalize=True, size=(815, 650), font=('Arial', 12), resizable=True)
     # window['-TIME-'].update(disabled=True)
@@ -111,12 +114,12 @@ if __name__ == '__main__':
             raw.pick(ch_names)
             eeg_signals = ['EEG Fp1: лобный полюс, слева',
                            'EEG Fp2: лобный полюс, справа',
-                           'EEG F3: фронтальная часть, слева (принятие решений?)',
-                           'EEG F4:фронтальная часть, справа (принятие решений?)',
-                           'EEG P3: задняя теменная (париетальная) часть, слева (запланированное движение)',
-                           'EEG P4: задняя теменная (париетальная) часть, справа (запланированное движение)',
-                           'EEG O1: затылочная (окципитальная) часть, слева (зрение)',
-                           'EEG O2: затылочная (окципитальная) часть, справа (зрение)',
+                           'EEG F3: фронтальная часть, слева',
+                           'EEG F4:фронтальная часть, справа',
+                           'EEG P3: задняя теменная (париетальная) часть, слева',
+                           'EEG P4: задняя теменная (париетальная) часть, справа',
+                           'EEG O1: затылочная (окципитальная) часть, слева',
+                           'EEG O2: затылочная (окципитальная) часть, справа',
                            'все каналы'
                            ]
             data_raw = raw.get_data()
@@ -140,7 +143,9 @@ if __name__ == '__main__':
             if values["-EXP-"] == 'закрытый':
                     window['-REPS-'].update(disabled=False)
                     window['-REPF-'].update(disabled=False)
+                    window['-NOFILTCLOSE-'].update(disabled=False)
                     window['-OPEN-'].update(disabled=True)
+                    window['-NOFILTOPEN-'].update(disabled=True)
                     timestamps = [f'{str(k)} : {v[0]}' for k, v in dict_times_closed.items()]
                     window['-TIME-'].update(disabled=False, values=timestamps)
                     parsed_wtp_etc = WTP_price_taste(folder, type='close')
@@ -165,6 +170,7 @@ if __name__ == '__main__':
                 window['-REPS-'].update(disabled=True)
                 window['-REPF-'].update(disabled=True)
                 window['-OPEN-'].update(disabled=False)
+                window['-NOFILTOPEN-'].update(disabled=False)
                 window['-PLOT-'].update(disabled=True)
                 timestamps = [f'{str(k)} : {v[0]}' for k, v in dict_times_open.items()]
                 window['-TIME-'].update(disabled=False, values=timestamps)
@@ -212,7 +218,7 @@ if __name__ == '__main__':
                 if fig_agg is not None:
                     delete_fig_agg(fig_agg)
                 #теперь нам нужно достать данные по каждому электроду
-
+                print(data)
                 #когда известны отрезки, сделаем ICA и добавим эти данные в data
                 filt_raw = raw.copy().filter(l_freq=1.0, h_freq=None)
                 filt_raw.crop(tmin=a//RATE, tmax=b//RATE)
@@ -220,44 +226,59 @@ if __name__ == '__main__':
                 ica.fit(filt_raw)
                 ica.apply(filt_raw, exclude=[0]) #!!!!!!!!!!!
                 ica_data = filt_raw.get_data()
-                for k, channel in zip(data.keys(), ica_data):
-                    data[k].append(channel)
+                data_for_multi_plot = copy.deepcopy(data)
+                # data_for_multi_plot['EEG Fp1'].append('GOTYA!')
 
-                fig = fig_maker_multi_ica(window, RATE, data, a, b)
+                for k, channel in zip(data_for_multi_plot.keys(), ica_data):
+                    data_for_multi_plot[k].append(channel)
+
+                print(2222, data_for_multi_plot)
+                fig = fig_maker_multi_ica(window, RATE, data_for_multi_plot, a, b)
                 fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                 window.Refresh()
 
                 #после отрисовки нужно удалить данные по ica из словаря
-                for k, v in data.items():
-                    data[k] = v[:-1]
+                # for k, v in data.items():
+                #     data[k] = v[:-1]
                 # window['-SEG-'].update(disabled=False)
                 # window['-ADD-'].update(disabled=False)
                 # window['-FFT-'].update(disabled=False)
 
             else:
-                file_csv = values["-ELEC-"].split(', ')[-1]
-                data_for_one_plot = data[file_csv][-1]
+                elct = values["-ELEC-"].split(': ')[0]
 
-                m = values['-TIME-']
+                # временные метки
                 if values['-START-'] == '':
                     a = 0
                 else:
                     a = int(float(values['-START-']) * RATE)
-                if values['-LEN-'] == '':
-                    b = len(data[a:])
-                else:
-                    b = a + int(float(values['-LEN-']) * RATE)
+                b = a + int(float(values['-LEN-']) * RATE)
 
                 if fig_agg is not None:
-                    delete_fig_agg(RATE, fig_agg)
-                d = data_for_one_plot[a:b]
+                    delete_fig_agg(fig_agg)
 
-                fig = fig_maker(window, d, a, b)
+                # когда известны отрезки, сделаем ICA и добавим эти данные в data
+                filt_raw = raw.copy().filter(l_freq=1.0, h_freq=None)
+                filt_raw.crop(tmin=a // RATE, tmax=b // RATE)
+                ica = ICA(n_components=5, max_iter="auto", random_state=97)
+                ica.fit(filt_raw)
+                ica.apply(filt_raw, exclude=[0])  # !!!!!!!!!!!
+                ica_data = filt_raw.get_data()
+                data_for_one_plot = data[elct]
+                print(1111111, data[elct])
+                i = ch_names.index(elct)
+                data_for_one_plot.append(ica_data[i])
+                print(1111, data_for_one_plot)
+                fig = fig_maker_ica(window, RATE, data_for_one_plot, a, b)
                 fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                 window.Refresh()
-                window['-SEG-'].update(disabled=False)
-                window['-ADD-'].update(disabled=False)
-                window['-FFT-'].update(disabled=False)
+
+                # fig = fig_maker(window, d, a, b)
+                # fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
+                # window.Refresh()
+                # window['-SEG-'].update(disabled=False)
+                # window['-ADD-'].update(disabled=False)
+                # window['-FFT-'].update(disabled=False)
             # нужен ли функционал, чтобы можно было потом выбрать, по какому промежутку строим?
 
         if event == '-SEG-':
@@ -329,7 +350,7 @@ if __name__ == '__main__':
                     sg.popup("Файл сохранён в папку results")
 
         if event == '-REPS-':
-            '''выгрузка общего отчёт + применение ICA'''
+            '''выгрузка общего отчёта закрытые 5 секунд в начале + применение ICA'''
             data_ica = ica_preproc_first_5_sec(folder, RATE)
             for k in final_data.keys():
                 # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
@@ -370,7 +391,7 @@ if __name__ == '__main__':
             sg.popup("Файл сохранён в папку")
 
         if event == '-REPF-':
-            '''выгрузка общего отчёт + применение ICA'''
+            '''выгрузка общего отчёта закрытые с -10 по -5 секу + применение ICA'''
             data_ica = ica_preproc_last_5_sec(folder, RATE)
             for k in final_data.keys():
                 # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
@@ -378,7 +399,7 @@ if __name__ == '__main__':
 
             path_result = f'{folder}/results/'
             with open(
-                    f'{path_result}/clear_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/clear_close_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
                                 'taste', 'similarity', 'WTP', 'price',
@@ -409,7 +430,7 @@ if __name__ == '__main__':
             sg.popup("Файл сохранён в папку")
 
         if event == '-OPEN-':
-            '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту + применение ICA'''
+            '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -10 по -5 сек + применение ICA'''
             data_ica = ica_preproc_open_5_sec(folder, RATE, order=order)
             for k in final_data.keys():
                 # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
@@ -417,7 +438,88 @@ if __name__ == '__main__':
             # print(parsed_wtp_etc)
             path_result = f'{folder}/results/'
             with open(
-                    f'{path_result}/clear_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/clear_open_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    'w') as csv_result:
+                print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
+                                'taste_stated', 'taste_revealed', 'price', 'WTP',
+                                'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
+                                'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
+                                'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
+                                'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
+                                'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
+                                'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
+                                'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
+                                'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                ]), file=csv_result)
+                for id, values in final_data.items():
+                    name = values[0]
+
+                    for brand, fft_results in values[-1].items():
+                        # print(brand)
+                        print(';'.join([id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste_stated'][brand],
+                                        parsed_wtp_etc[name]['taste_revealed'][brand], parsed_wtp_etc[name]['price'][brand],
+                                        parsed_wtp_etc[name]['WTP'][brand], fft_results]), file=csv_result)
+
+            sg.popup("Файл сохранён в папку")
+
+        if event == '-NOFILTCLOSE-':
+            '''выгрузка общего отчёта закрытые с -10 по -5 сек БЕЗ ICA'''
+            data_ica = no_ica_last_5_sec(folder, RATE)
+            for k in final_data.keys():
+                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
+                final_data[k].append(data_ica[final_data[k][0]])
+
+            path_result = f'{folder}/results/'
+            with open(
+                    f'{path_result}/nofilter_close_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    'w') as csv_result:
+                print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
+                                'taste', 'similarity', 'WTP', 'price',
+                                'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
+                                'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
+                                'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
+                                'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
+                                'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
+                                'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
+                                'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
+                                'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                ]), file=csv_result)
+                for id, values in final_data.items():
+                    name = values[0]
+                    for brand, fft_results in values[-1].items():
+                        print(';'.join(
+                            [id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
+                             parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
+                             parsed_wtp_etc[name]['price'][brand], fft_results]), file=csv_result)
+
+            sg.popup("Файл сохранён в папку")
+
+        if event == '-NOFILTOPEN-':
+            '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -6 по -1 сек + БЕЗ ICA'''
+            data_ica = no_ica_open_5_sec(folder, RATE, order=order)
+            for k in final_data.keys():
+                # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
+                final_data[k].append(data_ica[final_data[k][0]])
+            # print(parsed_wtp_etc)
+            path_result = f'{folder}/results/'
+            with open(
+                    f'{path_result}/nofilter_open_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
                                 'taste_stated', 'taste_revealed', 'price', 'WTP',

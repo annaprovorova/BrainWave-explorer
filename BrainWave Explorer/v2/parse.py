@@ -280,10 +280,12 @@ def time_range(path_time, type='close', path_type='', order=[]):
         parsed_types_open = {}
 
         time = time_file.readlines()[26:]
+        print(time)
         print('!!!!!!!!!!!!!!!!!!!!!!!!!!', len(time))
         for i in range(0, 18, 3):
             label = float(time[i].split()[-1])
             next_label = float(time[i+1].split()[-1])
+            #print(i, i//3, label, next_label)
             parsed_types_open[order[i//3]] = [label, next_label]
 
         time_file.close()
