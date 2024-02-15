@@ -15,6 +15,8 @@ BrainWave Explorer - программа, предназначенная для �
 
 
 if __name__ == '__main__':
+    '''Запуск основной программы'''
+
     sg.theme('LightBlue2')  # это раскраска темы
     RATE = 500 #частота считываний в 1 с
     volunteers_combo = sg.Combo([], font=('Arial Bold', 12), expand_x=True, enable_events=True,
@@ -332,7 +334,7 @@ if __name__ == '__main__':
                          'P3-alpha', 'P3 -beta',
                          'P4-alpha', 'P4 -beta',
                          'O3-alpha', 'O3 - beta',
-                         'O4-alpha', 'O4 -beta'
+                         'O4-alpha', 'O4 -beta',
                             ]), file=csv_result)
                     for id, values in final_data.items():
                         name = values[0]
@@ -360,26 +362,34 @@ if __name__ == '__main__':
             if not os.path.exists(path_result):
                 os.mkdir(path_result)
             with open(
-                    f'{path_result}/clear_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/clear_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
                                 'taste', 'similarity', 'WTP', 'price',
                                 'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                 'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
                                 'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
                                 'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
                                 'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
                                 'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
                                 'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
                                 'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
                                 'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
                                 'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
                                 'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
                                 'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
                                 'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
                                 'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
                                 'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
-                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
+                                'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5',
                                 ]), file=csv_result)
                 for id, values in final_data.items():
                     name = values[0]
@@ -399,26 +409,34 @@ if __name__ == '__main__':
 
             path_result = f'{folder}/results/'
             with open(
-                    f'{path_result}/clear_close_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/clear_close_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
                                 'taste', 'similarity', 'WTP', 'price',
                                 'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                 'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
                                 'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
                                 'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
                                 'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
                                 'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
                                 'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
                                 'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
                                 'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
                                 'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
                                 'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
                                 'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
                                 'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
                                 'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
                                 'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
-                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
+                                'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5'
                                 ]), file=csv_result)
                 for id, values in final_data.items():
                     name = values[0]
@@ -438,26 +456,34 @@ if __name__ == '__main__':
             # print(parsed_wtp_etc)
             path_result = f'{folder}/results/'
             with open(
-                    f'{path_result}/clear_open_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/clear_open_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                'taste_stated', 'taste_revealed', 'price', 'WTP',
+                                'taste', 'similarity', 'WTP', 'price',
                                 'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                 'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
                                 'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
                                 'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
                                 'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
                                 'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
                                 'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
                                 'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
                                 'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
                                 'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
                                 'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
                                 'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
                                 'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
                                 'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
                                 'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
-                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
+                                'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5'
                                 ]), file=csv_result)
                 for id, values in final_data.items():
                     name = values[0]
@@ -479,26 +505,34 @@ if __name__ == '__main__':
 
             path_result = f'{folder}/results/'
             with open(
-                    f'{path_result}/nofilter_close_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/nofilter_close_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
                                 'taste', 'similarity', 'WTP', 'price',
                                 'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                 'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
                                 'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
                                 'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
                                 'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
                                 'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
                                 'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
                                 'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
                                 'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
                                 'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
                                 'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
                                 'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
                                 'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
                                 'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
                                 'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
-                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
+                                'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5'
                                 ]), file=csv_result)
                 for id, values in final_data.items():
                     name = values[0]
@@ -519,26 +553,34 @@ if __name__ == '__main__':
             # print(parsed_wtp_etc)
             path_result = f'{folder}/results/'
             with open(
-                    f'{path_result}/nofilter_open_result {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                    f'{path_result}/nofilter_open_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                     'w') as csv_result:
                 print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                'taste_stated', 'taste_revealed', 'price', 'WTP',
+                                'taste', 'similarity', 'WTP', 'price',
                                 'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                 'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                                'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
                                 'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
                                 'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                                'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
                                 'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
                                 'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                                'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
                                 'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
                                 'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                                'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
                                 'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
                                 'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                                '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
                                 'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
                                 'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                                'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
                                 'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
                                 'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                                'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
                                 'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
-                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5'
+                                'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
+                                'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5'
                                 ]), file=csv_result)
                 for id, values in final_data.items():
                     name = values[0]
