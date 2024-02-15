@@ -182,7 +182,7 @@ def ica_preproc_last_5_sec(path, RATE):
             n_sec = sec.get_data().shape[1] // RATE
             # time_start = n_sec - 10
             # time_finish = n_sec - 5
-            time_start = n_sec - 2 * (n_sec // 6)
+            time_start = n_sec - (n_sec // 3)
             time_finish = time_start + 5
             if time_finish > n_sec:
                 time_start = n_sec - 5
@@ -264,7 +264,7 @@ def no_ica_last_5_sec(path, RATE):
             n_sec = sec.get_data().shape[1]// RATE
             # time_start = n_sec - 5 # ВОТ ТУТ ИЗМЕНИЛА ВРЕМЯ, БЕРЁМ ПОСЛЕДНИЕ 5 СЕКУНД!!!
             # time_finish = n_sec
-            time_start = n_sec - 2 * (n_sec // 6)
+            time_start = n_sec -(n_sec // 3)
             time_finish = time_start + 5
             if time_finish > n_sec:
                 time_start = n_sec - 5
