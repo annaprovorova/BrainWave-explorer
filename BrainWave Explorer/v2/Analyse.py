@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 from scipy.fft import rfft, rfftfreq
-from parse import time_range
+from parse import *
 
 import matplotlib.pyplot as plt
 
@@ -130,21 +130,24 @@ def ica_preproc_first_5_sec(path, RATE):
     return data
 
 
-def ica_preproc_last_5_sec(path, RATE):
+def ica_preproc_last_5_sec(path, RATE, type='cola'):
     '''
     :param path: str, путь к папке с данными
     :return: data: dict, словарь, ключ - фамилия волонтёра, значение - словарь по типам кока-колы
     '''
     path_vol = fr'{path}\DATA'
     data = {}
-    cola_types = {}
-    cola_times = {}
+    types = {}
+    times = {}
     file_extract = open('for_images_filtred.csv', 'w', encoding='UTF-8')
     for vol in os.listdir(path_vol):
         path_time = fr'{path}\DATA\{vol}\times.txt'
-        path_type = f'{path}\DATA\{vol}\order.txt'
-        cola_times = time_range(path_time, type='close', path_type=path_type)
-        cola_types = {}
+        path_order = f'{path}\DATA\{vol}\order.txt'
+        if type == 'cola':
+            times = time_range(path_time, type='close', path_order=path_order)
+        elif type == 'honey':
+            times = time_range_honey(path_time, type='close', path_order=path_order)
+        types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
         raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
         ch_names = ['EEG Fp1',
@@ -160,11 +163,11 @@ def ica_preproc_last_5_sec(path, RATE):
         filt_raw = raw.copy().filter(l_freq=1.0, h_freq=None) #Рекомендуется использовать фильтр низких частот с частотой больше 1 Гц.
                                                               #для удаления низкочастотных дрейфов, которые могут негативно повлиять на качество подбора ICA.
 
-        cola_times = dict(sorted(cola_times.items()))
-        for cola in cola_times:
+        times = dict(sorted(times.items()))
+        for cola in times:
             sec = filt_raw.copy()
 
-            sec.crop(tmin=cola_times[cola][0], tmax=cola_times[cola][1])
+            sec.crop(tmin=times[cola][0], tmax=times[cola][1])
             ica = ICA(n_components=5, max_iter="auto", random_state=97)
             ica.fit(sec)
             # explained_var_ratio = ica.get_explained_variance_ratio(
@@ -173,7 +176,7 @@ def ica_preproc_last_5_sec(path, RATE):
             # num_component = explained_var_ratio[max(explained_var_ratio)]
             ica.apply(sec, exclude=[0]) #num_component
 
-            cola_types[cola] = []
+            types[cola] = []
 
             ch_exp = {}
 
@@ -214,14 +217,14 @@ def ica_preproc_last_5_sec(path, RATE):
                 ch_exp[ch_name[4:] + '_b_5'] = tmp[1]
                 ch_exp[ch_name[4:] + '_g_5'] = tmp[2]
             ch_exp = dict(sorted(ch_exp.items())) # сортировка нужна для того, чтобы данные шли по каналам по секундам внутри канала
-            cola_types[cola] = ';'.join(ch_exp.values()).replace('.', ',')
-        data[vol] = cola_types
+            types[cola] = ';'.join(ch_exp.values()).replace('.', ',')
+        data[vol] = types
         # break
     file_extract.close()
     return data
 
 
-def no_ica_last_5_sec(path, RATE):
+def no_ica_last_5_sec(path, RATE, order, type='cola'):
     '''
     функция считает разложение на альфа и бета волны без применения ICA
     :param path: str, путь к папке с данными
@@ -230,12 +233,15 @@ def no_ica_last_5_sec(path, RATE):
     path_vol = fr'{path}\DATA'
     data = {}
     cola_types = {}
-    cola_times = {}
+    times = {}
     file_extract = open('for_images.csv', 'w', encoding='UTF-8')
     for vol in os.listdir(path_vol):
         path_time = fr'{path}\DATA\{vol}\times.txt'
-        path_type = f'{path}\DATA\{vol}\order.txt'
-        cola_times = time_range(path_time, type='close', path_type=path_type)
+        path_order = f'{path}\DATA\{vol}\order.txt'
+        if type == 'cola':
+            times = time_range(path_time, type='close',  order=order, path_order=path_order)
+        elif type == 'honey':
+            times = time_range_honey(path_time, type='close', order=order ,path_order=path_order )
         cola_types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
         raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
@@ -250,11 +256,11 @@ def no_ica_last_5_sec(path, RATE):
                     ]
         raw.pick(ch_names)
 
-        cola_times = dict(sorted(cola_times.items()))
-        for cola in cola_times:
+        times = dict(sorted(times.items()))
+        for cola in times:
             sec = raw.copy()
 
-            sec.crop(tmin=cola_times[cola][0], tmax=cola_times[cola][1])
+            sec.crop(tmin=times[cola][0], tmax=times[cola][1])
             cola_types[cola] = []
 
             ch_exp = {}
@@ -269,10 +275,10 @@ def no_ica_last_5_sec(path, RATE):
             if time_finish > n_sec:
                 time_start = n_sec - 5
                 time_finish = n_sec
-            print(cola_times[cola][0], cola_times[cola][1], time_start, time_finish, n_sec)
+            # print(times[cola][0], times[cola][1], time_start, time_finish, n_sec)
             # print(sec.get_data().shape, cola_times)
             # print(n_sec, time_start, time_finish)
-            print(f'ИМЯ:{vol}, начало:{cola_times[cola][0]}, конец: {cola_times[cola][1]}, длина: {n_sec}, сек расчёта: {time_start}, cola: {cola}')
+            # print(f'ИМЯ:{vol}, начало:{times[cola][0]}, конец: {times[cola][1]}, длина: {n_sec}, сек расчёта: {time_start}, cola: {cola}')
             for ch_name, channel in zip(ch_names, sec.get_data()):
                 # print(type(channel))
                 # print(f'{vol};{cola};{ch_name};{";".join(map(str, list(channel)))}', file=file_extract)
@@ -306,22 +312,26 @@ def no_ica_last_5_sec(path, RATE):
     return data
 
 
-def ica_preproc_open_5_sec(path, RATE, order=[]):
+def ica_preproc_open_5_sec(path, RATE, order=[], type='cola'):
     '''
-    Функция для выгрузки отчёта по эксперименту в открытую, берём с -6 по -1 секунды перед сигналом о завершении ответов на вопросы
+    Функция для выгрузки отчёта по эксперименту в открытую
     :param path: str, путь к папке с данными
     :return: data: dict, словарь, ключ - фамилия волонтёра, значение - словарь по типам кока-колы
     '''
     path_vol = fr'{path}\DATA'
     data = {}
     cola_types = {}
-    cola_times = {}
+    times = {}
     for vol in os.listdir(path_vol):
-        print(vol)
+        # print(vol)
         path_time = fr'{path}\DATA\{vol}\times.txt'
+        path_order = f'{path}\DATA\{vol}\order.txt'
         # path_type = f'{path}\DATA\{vol}\order.txt'
-        cola_times = time_range(path_time, type='open', order=order)
-        print(cola_times)
+        if type == 'cola':
+            times = time_range(path_time, type='open',  order=order, path_order=path_order)
+        elif type == 'honey':
+            times = time_range_honey(path_time, type='open', order=order , path_order=path_order )
+
         cola_types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
         raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
@@ -338,11 +348,11 @@ def ica_preproc_open_5_sec(path, RATE, order=[]):
         filt_raw = raw.copy().filter(l_freq=1.0, h_freq=None) #Рекомендуется использовать фильтр низких частот с частотой больше 1 Гц.
                                                               #для удаления низкочастотных дрейфов, которые могут негативно повлиять на качество подбора ICA.
 
-        cola_times = dict(sorted(cola_times.items()))
-        for cola in cola_times:
+        times = dict(sorted(times.items()))
+        for cola in times:
             sec = filt_raw.copy()
 
-            sec.crop(tmin=cola_times[cola][0], tmax=cola_times[cola][1])
+            sec.crop(tmin=times[cola][0], tmax=times[cola][1])
             ica = ICA(n_components=5, max_iter="auto", random_state=97)
             ica.fit(sec)
             explained_var_ratio = ica.get_explained_variance_ratio(
@@ -356,10 +366,15 @@ def ica_preproc_open_5_sec(path, RATE, order=[]):
             ch_exp = {}
 
             # выбор отрезков, по которым считаем FFT
-            # пока без обобщения, у меня считается просто с -10 по -5
+
             n_sec = sec.get_data().shape[1]// RATE
-            time_start = n_sec - 10
-            time_finish = n_sec - 5
+            time_start = n_sec - (n_sec // 3)
+            time_finish = time_start + 5
+            if time_finish > n_sec:
+                time_start = n_sec - 5
+                time_finish = n_sec
+            # time_start = n_sec - 10
+            # time_finish = n_sec - 5
             # print(sec.get_data().shape, cola_times)
             # print(n_sec, time_start, time_finish)
             for ch_name, channel in zip(ch_names, sec.get_data()):
@@ -390,24 +405,30 @@ def ica_preproc_open_5_sec(path, RATE, order=[]):
     return data
 
 
-def no_ica_open_5_sec(path, RATE, order=[]):
+def no_ica_open_5_sec(path, RATE, order=[], type='cola'):
     '''
     Функция для выгрузки отчёта по эксперименту в открытую, берём с -6 по -1 секунды перед сигналом о завершении ответов на вопросы
     БЕЗ ICA преобразования
     :param path: str, путь к папке с данными
     :return: data: dict, словарь, ключ - фамилия волонтёра, значение - словарь по типам кока-колы
     '''
+
     path_vol = fr'{path}\DATA'
     data = {}
     cola_types = {}
-    cola_times = {}
+    times = {}
     for vol in os.listdir(path_vol):
-        print(vol)
+        # print(vol)
         path_time = fr'{path}\DATA\{vol}\times.txt'
-        # path_type = f'{path}\DATA\{vol}\order.txt'
-        print(vol)
-        cola_times = time_range(path_time, type='open', order=order)
-        print(cola_times)
+        path_order = f'{path}\DATA\{vol}\order.txt'
+        if type == 'cola':
+            print('colaaaaa')
+            times = time_range(path_time, type='open',  order=order, path_order=path_order)
+        elif type == 'honey':
+            print('honeeeey')
+            times = time_range_honey(path_time, type='open', order=order ,path_order=path_order )
+        print(times)
+
         cola_types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
         raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
@@ -422,11 +443,11 @@ def no_ica_open_5_sec(path, RATE, order=[]):
                     ]
         raw.pick(ch_names)
 
-        cola_times = dict(sorted(cola_times.items()))
-        for cola in cola_times:
+        times = dict(sorted(times.items()))
+        for cola in times:
             sec = raw.copy()
 
-            sec.crop(tmin=cola_times[cola][0], tmax=cola_times[cola][1])
+            sec.crop(tmin=times[cola][0], tmax=times[cola][1])
             cola_types[cola] = []
 
             ch_exp = {}
@@ -434,8 +455,13 @@ def no_ica_open_5_sec(path, RATE, order=[]):
             # выбор отрезков, по которым считаем FFT
             # пока без обобщения, у меня считается просто с -6 по -1
             n_sec = sec.get_data().shape[1]// RATE
-            time_start = n_sec - 10
-            time_finish = n_sec - 5
+            time_start = n_sec - (n_sec // 3)
+            time_finish = time_start + 5
+            if time_finish > n_sec:
+                time_start = n_sec - 5
+                time_finish = n_sec
+            # time_start = n_sec - 10
+            # time_finish = n_sec - 5
             # print(sec.get_data().shape, cola_times)
             # print(n_sec, time_start, time_finish)
             for ch_name, channel in zip(ch_names, sec.get_data()):

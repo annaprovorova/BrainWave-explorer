@@ -88,6 +88,7 @@ if __name__ == '__main__':
             break
         if values['P1'] == True:
             print('cola')
+            type = 'cola'
             if event == '-FOLDER-':
                 folder = values['-FOLDER-']
                 path_vol = f'{folder}/DATA/'
@@ -283,10 +284,10 @@ if __name__ == '__main__':
                     ica.apply(filt_raw, exclude=[0])  # !!!!!!!!!!!
                     ica_data = filt_raw.get_data()
                     data_for_one_plot = data[elct]
-                    print(1111111, data[elct])
+                    # print(1111111, data[elct])
                     i = ch_names.index(elct)
                     data_for_one_plot.append(ica_data[i])
-                    print(1111, data_for_one_plot)
+                    # print(1111, data_for_one_plot)
                     fig = fig_maker_ica(window, RATE, data_for_one_plot, a, b)
                     fig_agg = draw_figure(window['-CANVAS-'].TKCanvas, fig)
                     window.Refresh()
@@ -418,7 +419,7 @@ if __name__ == '__main__':
 
             if event == '-REPF-':
                 '''выгрузка общего отчёта закрытые с -10 по -5 секу + применение ICA'''
-                data_ica = ica_preproc_last_5_sec(folder, RATE)
+                data_ica = ica_preproc_last_5_sec(folder, RATE, type=type)
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
@@ -464,8 +465,9 @@ if __name__ == '__main__':
                 sg.popup("Файл сохранён в папку")
 
             if event == '-OPEN-':
-                '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -10 по -5 сек + применение ICA'''
-                data_ica = ica_preproc_open_5_sec(folder, RATE, order=order_cola)
+                '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту секунды в конце + применение ICA'''
+                data_ica = ica_preproc_open_5_sec(folder, RATE, type=type, order=order_cola)
+                print(data_ica.values())
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
@@ -475,7 +477,7 @@ if __name__ == '__main__':
                         f'{path_result}/clear_open_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                         'w') as csv_result:
                     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
+                                    'taste_stated', 'taste_revealed', 'price', 'WTP',
                                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
                                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
@@ -503,9 +505,9 @@ if __name__ == '__main__':
                                     ]), file=csv_result)
                     for id, values in final_data.items():
                         name = values[0]
-
+                        # print(values[-1].items())
                         for brand, fft_results in values[-1].items():
-                            # print(brand)
+                            # print(parsed_wtp_etc)
                             print(';'.join([id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste_stated'][brand],
                                             parsed_wtp_etc[name]['taste_revealed'][brand], parsed_wtp_etc[name]['price'][brand],
                                             parsed_wtp_etc[name]['WTP'][brand], fft_results]), file=csv_result)
@@ -514,7 +516,7 @@ if __name__ == '__main__':
 
             if event == '-NOFILTCLOSE-':
                 '''выгрузка общего отчёта закрытые с -10 по -5 сек БЕЗ ICA'''
-                data_ica = no_ica_last_5_sec(folder, RATE)
+                data_ica = no_ica_last_5_sec(folder, RATE, order=order_cola)
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
@@ -563,16 +565,15 @@ if __name__ == '__main__':
             if event == '-NOFILTOPEN-':
                 '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -6 по -1 сек + БЕЗ ICA'''
                 data_ica = no_ica_open_5_sec(folder, RATE, order=order_cola)
+                print(data_ica)
                 for k in final_data.keys():
-                    # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
-                # print(parsed_wtp_etc)
                 path_result = f'{folder}/results/'
                 with open(
                         f'{path_result}/nofilter_open_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                         'w') as csv_result:
                     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
+                                     'taste_stated', 'taste_revealed', 'price', 'WTP',
                                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
                                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
@@ -598,6 +599,7 @@ if __name__ == '__main__':
                                     'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
                                     'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5'
                                     ]), file=csv_result)
+
                     for id, values in final_data.items():
                         name = values[0]
 
@@ -611,6 +613,7 @@ if __name__ == '__main__':
 
         else:
             print('honey')
+            type = 'honey'
             if event == '-FOLDER-':
                 folder = values['-FOLDER-']
                 path_vol = f'{folder}/DATA/'
@@ -690,21 +693,16 @@ if __name__ == '__main__':
                     window['-NOFILTOPEN-'].update(disabled=True)
                     timestamps = [f'{str(k)} : {v[0]}' for k, v in dict_times_closed.items()]
                     window['-TIME-'].update(disabled=False, values=timestamps)
-                    parsed_wtp_etc = WTP_price_taste(folder, type='close')
+                    parsed_wtp_etc = parse_features_honey(folder, type='close')
 
                     pre_data = {
-                        "cola1": [],
-                        "cola2": [],
-                        "cola_zero1": [],
-                        "cola_zero2": [],
-                        "d_cola1": [],
-                        "d_cola2": [],
-                        "d_zero1": [],
-                        "d_zero2": [],
-                        "funky1": [],
-                        "funky2": [],
-                        "chernogolovka1": [],
-                        "chernogolovka2": []
+                        "Bashkirsky": [],
+                        "Dalnevostochniy": [],
+                        "Dedushkin_uley": [],
+                        "Lubomedovo": [],
+                        "Medovoye_razdolie": [],
+                        "Permskaya_fabrika": [],
+                        "Permskiye_pcholy": [],
                     }
                     dict_times = dict_times_closed
 
@@ -716,7 +714,7 @@ if __name__ == '__main__':
                     window['-PLOT-'].update(disabled=True)
                     timestamps = [f'{str(k)} : {v[0]}' for k, v in dict_times_open.items()]
                     window['-TIME-'].update(disabled=False, values=timestamps)
-                    # parsed_wtp_etc = WTP_price_taste(folder, type='open', order=order_honey)
+                    parsed_wtp_etc = parse_features_honey(folder, type='open', order=order_honey)
 
                     # pre_data = {
                     #     'cola':[],
@@ -943,18 +941,21 @@ if __name__ == '__main__':
                 sg.popup("Файл сохранён в папку")
 
             if event == '-REPF-':
-                '''выгрузка общего отчёта закрытые с -10 по -5 секу + применение ICA'''
-                data_ica = ica_preproc_last_5_sec(folder, RATE)
+                '''выгрузка общего отчёта закрытые в конце + применение ICA'''
+                data_ica = ica_preproc_last_5_sec(folder, RATE, type=type)
+
                 for k in final_data.keys():
+
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
-                    final_data[k].append(data_ica[final_data[k][0]])
+                    final_data[k].append(data_ica[final_data[k][0]]) # в final_data ключи - ID, а в data_ica - фамилии, они в final_data[k][0]
 
                 path_result = f'{folder}/results/'
-                with open(
-                        f'{path_result}/clear_close_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
-                        'w') as csv_result:
+                if not os.path.exists(path_result):
+                    os.mkdir(path_result)
+                with open(f'{path_result}/clear_close_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv', mode='w') as csv_result:
                     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
+                                    'taste', 'quality', 'WTP', 'price',
+                                    'f1','f2','f3','f4','f5','f6','f7','f8',
                                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
                                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
@@ -982,27 +983,42 @@ if __name__ == '__main__':
                                     ]), file=csv_result)
                     for id, values in final_data.items():
                         name = values[0]
+                        print(parsed_wtp_etc[name]['taste'])
                         for brand, fft_results in values[-1].items():
                             print(';'.join(
-                                [id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
-                                 parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
-                                 parsed_wtp_etc[name]['price'][brand], fft_results]), file=csv_result)
+                                [id, values[0], values[1], values[2], brand,
+                                 parsed_wtp_etc[name]['taste'][brand],
+                                 parsed_wtp_etc[name]['quality'][brand],
+                                 parsed_wtp_etc[name]['WTP'][brand],
+                                 parsed_wtp_etc[name]['price'][brand],
+                                 parsed_wtp_etc[name]['f1'][brand],
+                                 parsed_wtp_etc[name]['f2'][brand],
+                                 parsed_wtp_etc[name]['f3'][brand],
+                                 parsed_wtp_etc[name]['f4'][brand],
+                                 parsed_wtp_etc[name]['f5'][brand],
+                                 parsed_wtp_etc[name]['f6'][brand],
+                                 parsed_wtp_etc[name]['f7'][brand],
+                                 parsed_wtp_etc[name]['f8'][brand],
+                                 fft_results]), file=csv_result)
 
                 sg.popup("Файл сохранён в папку")
 
             if event == '-OPEN-':
                 '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -10 по -5 сек + применение ICA'''
-                data_ica = ica_preproc_open_5_sec(folder, RATE, order=order_cola)
+                data_ica = ica_preproc_open_5_sec(folder, RATE, order=order_honey, type=type)
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
                 # print(parsed_wtp_etc)
                 path_result = f'{folder}/results/'
+                if not os.path.exists(path_result):
+                    os.mkdir(path_result)
                 with open(
                         f'{path_result}/clear_open_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                         'w') as csv_result:
                     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
+                                    'taste_stated', 'taste_revealed', 'WTP', 'price', 'quality',
+                                    'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8',
                                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
                                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
@@ -1036,24 +1052,37 @@ if __name__ == '__main__':
                             print(';'.join([id, values[0], values[1], values[2], brand,
                                             parsed_wtp_etc[name]['taste_stated'][brand],
                                             parsed_wtp_etc[name]['taste_revealed'][brand],
+                                            parsed_wtp_etc[name]['WTP'][brand],
                                             parsed_wtp_etc[name]['price'][brand],
-                                            parsed_wtp_etc[name]['WTP'][brand], fft_results]), file=csv_result)
+                                            parsed_wtp_etc[name]['quality'][brand],
+                                            parsed_wtp_etc[name]['f1'][brand],
+                                            parsed_wtp_etc[name]['f2'][brand],
+                                            parsed_wtp_etc[name]['f3'][brand],
+                                            parsed_wtp_etc[name]['f4'][brand],
+                                            parsed_wtp_etc[name]['f5'][brand],
+                                            parsed_wtp_etc[name]['f6'][brand],
+                                            parsed_wtp_etc[name]['f7'][brand],
+                                            parsed_wtp_etc[name]['f8'][brand],
+                                            fft_results]), file=csv_result)
 
                 sg.popup("Файл сохранён в папку")
 
             if event == '-NOFILTCLOSE-':
-                '''выгрузка общего отчёта закрытые с -10 по -5 сек БЕЗ ICA'''
-                data_ica = no_ica_last_5_sec(folder, RATE)
+                '''выгрузка общего отчёта закрытые БЕЗ ICA'''
+                data_ica = no_ica_last_5_sec(folder, RATE, order= order_honey, type=type)
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
 
                 path_result = f'{folder}/results/'
+                if not os.path.exists(path_result):
+                    os.mkdir(path_result)
                 with open(
                         f'{path_result}/nofilter_close_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                         'w') as csv_result:
                     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
+                                    'taste', 'quality', 'WTP', 'price',
+                                    'f1','f2','f3','f4','f5','f6','f7','f8',
                                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
                                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
@@ -1083,25 +1112,39 @@ if __name__ == '__main__':
                         name = values[0]
                         for brand, fft_results in values[-1].items():
                             print(';'.join(
-                                [id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
-                                 parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
-                                 parsed_wtp_etc[name]['price'][brand], fft_results]), file=csv_result)
+                                [id, values[0], values[1], values[2], brand,
+                                 parsed_wtp_etc[name]['taste'][brand],
+                                 parsed_wtp_etc[name]['quality'][brand],
+                                 parsed_wtp_etc[name]['WTP'][brand],
+                                 parsed_wtp_etc[name]['price'][brand],
+                                 parsed_wtp_etc[name]['f1'][brand],
+                                 parsed_wtp_etc[name]['f2'][brand],
+                                 parsed_wtp_etc[name]['f3'][brand],
+                                 parsed_wtp_etc[name]['f4'][brand],
+                                 parsed_wtp_etc[name]['f5'][brand],
+                                 parsed_wtp_etc[name]['f6'][brand],
+                                 parsed_wtp_etc[name]['f7'][brand],
+                                 parsed_wtp_etc[name]['f8'][brand],
+                                 fft_results]), file=csv_result)
 
                 sg.popup("Файл сохранён в папку")
 
             if event == '-NOFILTOPEN-':
                 '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -6 по -1 сек + БЕЗ ICA'''
-                data_ica = no_ica_open_5_sec(folder, RATE, order=order_cola)
+                data_ica = no_ica_open_5_sec(folder, RATE, order=order_honey)
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
                 # print(parsed_wtp_etc)
                 path_result = f'{folder}/results/'
+                if not os.path.exists(path_result):
+                    os.mkdir(path_result)
                 with open(
                         f'{path_result}/nofilter_open_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
                         'w') as csv_result:
                     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
+                                    'taste_stated', 'taste_revealed', 'WTP', 'price', 'quality',
+                                    'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8',
                                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
                                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
                                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
@@ -1136,7 +1179,18 @@ if __name__ == '__main__':
                                             parsed_wtp_etc[name]['taste_stated'][brand],
                                             parsed_wtp_etc[name]['taste_revealed'][brand],
                                             parsed_wtp_etc[name]['price'][brand],
-                                            parsed_wtp_etc[name]['WTP'][brand], fft_results]), file=csv_result)
+                                            parsed_wtp_etc[name]['WTP'][brand],
+                                            parsed_wtp_etc[name]['quality'][brand],
+                                            parsed_wtp_etc[name]['f1'][brand],
+                                            parsed_wtp_etc[name]['f2'][brand],
+                                            parsed_wtp_etc[name]['f3'][brand],
+                                            parsed_wtp_etc[name]['f4'][brand],
+                                            parsed_wtp_etc[name]['f5'][brand],
+                                            parsed_wtp_etc[name]['f6'][brand],
+                                            parsed_wtp_etc[name]['f7'][brand],
+                                            parsed_wtp_etc[name]['f8'][brand],
+                                            fft_results]),
+                                              file=csv_result)
 
                 sg.popup("Файл сохранён в папку")
 
