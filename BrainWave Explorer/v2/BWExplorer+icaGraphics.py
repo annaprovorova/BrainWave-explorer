@@ -892,57 +892,57 @@ if __name__ == '__main__':
 
             if event == '-REPS-':
                 '''выгрузка общего отчёта закрытые 5 секунд в начале + применение ICA'''
-                data_ica = ica_preproc_first_5_sec(folder, RATE)
+                data_ica = ica_preproc_first_5_sec(folder, RATE,order=order_honey, type_honey='taste')
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
 
-                path_result = f'{folder}/results/'
-                if not os.path.exists(path_result):
-                    os.mkdir(path_result)
-                with open(
-                        f'{path_result}/clear_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
-                        'w') as csv_result:
-                    print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
-                                    'taste', 'similarity', 'WTP', 'price',
-                                    'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
-                                    'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
-                                    'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
-                                    'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
-                                    'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
-                                    'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
-                                    'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
-                                    'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
-                                    'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
-                                    'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
-                                    'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
-                                    'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
-                                    'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
-                                    'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
-                                    '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
-                                    'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
-                                    'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
-                                    'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
-                                    'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
-                                    'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
-                                    'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
-                                    'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
-                                    'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
-                                    'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5',
-                                    ]), file=csv_result)
-                    for id, values in final_data.items():
-                        name = values[0]
-                        for brand, fft_results in values[-1].items():
-                            print(';'.join(
-                                [id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
-                                 parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
-                                 parsed_wtp_etc[name]['price'][brand], fft_results]), file=csv_result)
-
-                sg.popup("Файл сохранён в папку")
+                # path_result = f'{folder}/results/'
+                # if not os.path.exists(path_result):
+                #     os.mkdir(path_result)
+                # with open(
+                #         f'{path_result}/clear_result_{folder.split("/")[-1]} {time.localtime().tm_mday}-{time.localtime().tm_mon}-{time.localtime().tm_year} {time.localtime().tm_hour}-{time.localtime().tm_min}.csv',
+                #         'w') as csv_result:
+                #     print(';'.join(['ID', 'name', 'Age', 'Sex', 'Brand',
+                #                     'taste', 'similarity', 'WTP', 'price',
+                #                     'F3-alpha_1', 'F3-alpha_2', 'F3-alpha_3', 'F3-alpha_4', 'F3-alpha_5',
+                #                     'F3-beta_1', 'F3-beta_2', 'F3-beta_3', 'F3-beta_4', 'F3-beta_5',
+                #                     'F3-gamma_1', 'F3-gamma_2', 'F3-gamma_3', 'F3-gamma_4', 'F3-gamma_5',
+                #                     'F4-alpha_1', 'F4-alpha_2', 'F4-alpha_3', 'F4-alpha_4', 'F4-alpha_5',
+                #                     'F4-beta_1', 'F4-beta_2', 'F4-beta_3', 'F4-beta_4', 'F4-beta_5',
+                #                     'F4-gamma_1', 'F4-gamma_2', 'F4-gamma_3', 'F4-gamma_4', 'F4-gamma_5',
+                #                     'Fp1-alpha_1', 'Fp1-alpha_2', 'Fp1-alpha_3', 'Fp1-alpha_4', 'Fp1-alpha_5',
+                #                     'Fp1-beta_1', 'Fp1-beta_2', 'Fp1-beta_3', 'Fp1-beta_4', 'Fp1-beta_5',
+                #                     'Fp1-gamma_1', 'Fp1-gamma_2', 'Fp1-gamma_3', 'Fp1-gamma_4', 'Fp1-gamma_5',
+                #                     'Fp2-alpha_1', 'Fp2-alpha_2', 'Fp2-alpha_3', 'Fp2-alpha_4', 'Fp2-alpha_5',
+                #                     'Fp2-beta_1', 'Fp2-beta_2', 'Fp2-beta_3', 'Fp2-beta_4', 'Fp2-beta_5',
+                #                     'Fp2-gamma_1', 'Fp2-gamma_2', 'Fp2-gamma_3', 'Fp2-gamma_4', 'Fp2-gamma_5',
+                #                     'O3-alpha_1', 'O3-alpha_2', 'O3-alpha_3', 'O3-alpha_4', 'O3-alpha_5',
+                #                     'O3-beta_1', 'O3-beta_2', 'O3-beta_3', 'O3-beta_4', 'O3-beta_5',
+                #                     '03-gamma_1', 'O3-gamma_2', 'O3-gamma_3', 'O3-gamma_4', 'O3-gamma_5',
+                #                     'O4-alpha_1', 'O4-alpha_2', 'O4-alpha_3', 'O4-alpha_4', 'O4-alpha_5',
+                #                     'O4-beta_1', 'O4-beta_2', 'O4-beta_3', 'O4-beta_4', 'O4-beta_5',
+                #                     'O4-gamma_1', 'O4-gamma_2', 'O4-gamma_3', 'O4-gamma_4', 'O4-gamma_5',
+                #                     'P3-alpha_1', 'P3-alpha_2', 'P3-alpha_3', 'P3-alpha_4', 'P3-alpha_5',
+                #                     'P3-beta_1', 'P3-beta_2', 'P3-beta_3', 'P3-beta_4', 'P3-beta_5',
+                #                     'P3-gamma_1', 'P3-gamma_2', 'P3-gamma_3', 'P3-gamma_4', 'P3-gamma_5',
+                #                     'P4-alpha_1', 'P4-alpha_2', 'P4-alpha_3', 'P4-alpha_4', 'P4-alpha_5',
+                #                     'P4-beta_1', 'P4-beta_2', 'P4-beta_3', 'P4-beta_4', 'P4-beta_5',
+                #                     'P4-gamma_1', 'P4-gamma_2', 'P4-gamma_3', 'P4-gamma_4', 'P4-gamma_5',
+                #                     ]), file=csv_result)
+                #     for id, values in final_data.items():
+                #         name = values[0]
+                #         for brand, fft_results in values[-1].items():
+                #             print(';'.join(
+                #                 [id, values[0], values[1], values[2], brand, parsed_wtp_etc[name]['taste'][brand],
+                #                  parsed_wtp_etc[name]['similarity'][brand], parsed_wtp_etc[name]['WTP'][brand],
+                #                  parsed_wtp_etc[name]['price'][brand], fft_results]), file=csv_result)
+                #
+                # sg.popup("Файл сохранён в папку")
 
             if event == '-REPF-':
                 '''выгрузка общего отчёта закрытые в конце + применение ICA'''
-                data_ica = ica_preproc_last_5_sec(folder, RATE, type=type)
+                data_ica = ica_preproc_last_5_sec(folder, RATE, type=type, type_honey='taste', order=order_honey)
 
                 for k in final_data.keys():
 
@@ -1005,7 +1005,7 @@ if __name__ == '__main__':
 
             if event == '-OPEN-':
                 '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -10 по -5 сек + применение ICA'''
-                data_ica = ica_preproc_open_5_sec(folder, RATE, order=order_honey, type=type)
+                data_ica = ica_preproc_open_5_sec(folder, RATE, order=order_honey, type=type, type_honey='taste')
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
@@ -1069,7 +1069,7 @@ if __name__ == '__main__':
 
             if event == '-NOFILTCLOSE-':
                 '''выгрузка общего отчёта закрытые БЕЗ ICA'''
-                data_ica = no_ica_last_5_sec(folder, RATE, order= order_honey, type=type)
+                data_ica = no_ica_last_5_sec(folder, RATE, order= order_honey, type=type, type_honey='taste')
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])

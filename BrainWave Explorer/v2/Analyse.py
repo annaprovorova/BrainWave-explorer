@@ -163,7 +163,7 @@ def ica_preproc_first_5_sec(path, RATE):
     return data
 
 
-def ica_preproc_last_5_sec(path, RATE, type='cola'):
+def ica_preproc_last_5_sec(path, RATE, type='cola', type_honey='WTP', order=[]):
     '''
     :param path: str, путь к папке с данными
     :return: data: dict, словарь, ключ - фамилия волонтёра, значение - словарь по типам кока-колы
@@ -179,7 +179,11 @@ def ica_preproc_last_5_sec(path, RATE, type='cola'):
         if type == 'cola':
             times = time_range(path_time, type='close', path_order=path_order)
         elif type == 'honey':
-            times = time_range_honey(path_time, type='close', path_order=path_order)
+            times_wtp, times_taste = time_range_honey(path_time, type='open', order=order, path_order=path_order)
+            if type_honey == ' WTP':
+                times = times_wtp
+            else:
+                times = times_taste
         types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
         raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
@@ -222,14 +226,13 @@ def ica_preproc_last_5_sec(path, RATE, type='cola'):
                 time_start, time_finish = calc_time(n_sec)
             else:
                 print('SUCCESS!')
-                time_start, time_finish = calc_time_honey_WTP(n_sec)
+                if type_honey == 'WTP':
+                    time_start, time_finish = calc_time_honey_WTP(n_sec)
+                else:
+                    print('WE ARE COUNTING DATA FOR TASTE!!!!')
+                    time_start, time_finish = calc_time_honey_taste(n_sec)
 
-
-            # print(sec.get_data().shape, cola_times)
-            # print(n_sec, time_start, time_finish)
             for ch_name, channel in zip(ch_names, sec.get_data()):
-                # print(f'{vol};{cola};{ch_name};{";".join(map(str, list(channel)))}', file=file_extract)
-                # print(channel.shape)
                 tmp = calc_fft(channel, RATE, time_start=time_start, time_finish=time_finish)
                 ch_exp[ch_name[4:] + '_a_1'] = tmp[0]
                 ch_exp[ch_name[4:] + '_b_1'] = tmp[1]
@@ -258,7 +261,7 @@ def ica_preproc_last_5_sec(path, RATE, type='cola'):
     return data
 
 
-def no_ica_last_5_sec(path, RATE, order, type='cola'):
+def no_ica_last_5_sec(path, RATE, order=[], type='cola', type_honey='WTP'):
     '''
     функция считает разложение на альфа и бета волны без применения ICA
     :param path: str, путь к папке с данными
@@ -275,7 +278,11 @@ def no_ica_last_5_sec(path, RATE, order, type='cola'):
         if type == 'cola':
             times = time_range(path_time, type='close',  order=order, path_order=path_order)
         elif type == 'honey':
-            times = time_range_honey(path_time, type='close', order=order ,path_order=path_order )
+            times_wtp, times_taste = time_range_honey(path_time, type='open', order=order, path_order=path_order)
+            if type_honey == ' WTP':
+                times = times_wtp
+            else:
+                times = times_taste
         cola_types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
         raw.apply_function(lambda x: x * 1e-6) #переводим в милливольты
@@ -299,16 +306,17 @@ def no_ica_last_5_sec(path, RATE, order, type='cola'):
 
             ch_exp = {}
 
-            # выбор отрезков, по которым считаем FFT
-            # пока без обобщения, у меня считается просто с -10 по -5
             n_sec = sec.get_data().shape[1]// RATE
-            # time_start = n_sec - 5 # ВОТ ТУТ ИЗМЕНИЛА ВРЕМЯ, БЕРЁМ ПОСЛЕДНИЕ 5 СЕКУНД!!!
-            # time_finish = n_sec
+
             if type == 'cola':
                 time_start, time_finish = calc_time(n_sec)
             else:
                 print('SUCCESS!')
-                time_start, time_finish = calc_time_honey_WTP(n_sec)
+                if type_honey == 'WTP':
+                    time_start, time_finish = calc_time_honey_WTP(n_sec)
+                else:
+                    print('WE ARE COUNTING DATA FOR TASTE!!!!')
+                    time_start, time_finish = calc_time_honey_taste(n_sec)
 
             # print(times[cola][0], times[cola][1], time_start, time_finish, n_sec)
             # print(sec.get_data().shape, cola_times)
@@ -347,7 +355,7 @@ def no_ica_last_5_sec(path, RATE, order, type='cola'):
     return data
 
 
-def ica_preproc_open_5_sec(path, RATE, order=[], type='cola'):
+def ica_preproc_open_5_sec(path, RATE, order=[], type='cola', type_honey='WTP'):
     '''
     Функция для выгрузки отчёта по эксперименту в открытую
     :param path: str, путь к папке с данными
@@ -365,7 +373,11 @@ def ica_preproc_open_5_sec(path, RATE, order=[], type='cola'):
         if type == 'cola':
             times = time_range(path_time, type='open',  order=order, path_order=path_order)
         elif type == 'honey':
-            times = time_range_honey(path_time, type='open', order=order , path_order=path_order )
+            times_wtp, times_taste = time_range_honey(path_time, type='open', order=order, path_order=path_order)
+            if type_honey == ' WTP':
+                times = times_wtp
+            else:
+                times = times_taste
 
         cola_types = {}
         raw = mne.io.read_raw_edf(fr"{path_vol}\{vol}\{vol}.edf", preload=True)
@@ -407,7 +419,11 @@ def ica_preproc_open_5_sec(path, RATE, order=[], type='cola'):
                 time_start, time_finish = calc_time(n_sec)
             else:
                 print('SUCCESS!')
-                time_start, time_finish = calc_time_honey_WTP(n_sec)
+                if type_honey == 'WTP':
+                    time_start, time_finish = calc_time_honey_WTP(n_sec)
+                else:
+                    print('WE ARE COUNTING DATA FOR TASTE!!!!')
+                    time_start, time_finish = calc_time_honey_taste(n_sec)
             # time_start = n_sec - 10
             # time_finish = n_sec - 5
             # print(sec.get_data().shape, cola_times)
