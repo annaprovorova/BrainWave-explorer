@@ -25,7 +25,7 @@ def calc_fft(data, RATE, time_start, time_finish):
     :return: [agr_alpha, agr_beta] суммарная мощность сигнала по альфа и бета частотам
     '''
     data = data[time_start*RATE: time_finish*RATE+1]
-    print(time_start, time_finish)
+    # print(time_start, time_finish)
     yf = np.abs(rfft(data))**2
     time_for_axes = np.arange(time_start, time_finish, 1/RATE)
     xf = rfftfreq(len(time_for_axes), 1/RATE)
@@ -53,6 +53,39 @@ def calc_fft(data, RATE, time_start, time_finish):
         i += 1
     return [str(agr_alpha), str(agr_beta), str(agr_gamma), str(agr_delta), str(agr_teta)]
 
+def calc_time(n):
+    '''
+    Функция для выбора секунд из временного отрезка
+    :param n: длин отрезка
+    :return: time_start, time_finish - времена начала и конца отрезка для расчётов
+    '''
+    time_start = n - (n // 3)
+    time_finish = time_start + 5
+    if time_finish > n:
+        time_start = n - 5
+        time_finish = n
+
+    return time_start, time_finish
+
+def calc_time_honey_WTP(n):
+    '''
+    Функция считает время для открезка с готовностью платить (после ПИКА "закончили пробовать")
+    :param n: длина отрезка
+    :return: time_start, time_finish - времена начала и конца отрезка для расчётов
+    '''
+    time_start = n - 5
+    time_finish = n
+    return time_start, time_finish
+
+def calc_time_honey_taste(n):
+    '''
+    Функция считает время для открезка с готовностью платить (после ПИКА "закончили пробовать")
+    :param n: длина отрезка
+    :return: time_start, time_finish - времена начала и конца отрезка для расчётов
+    '''
+    time_start = 0
+    time_finish = 5
+    return time_start, time_finish
 
 def ica_preproc_first_5_sec(path, RATE):
     '''
@@ -124,7 +157,7 @@ def ica_preproc_first_5_sec(path, RATE):
                 ch_exp[ch_name[4:] + '_b_5'] = tmp[1]
                 ch_exp[ch_name[4:] + '_g_5'] = tmp[2]
             ch_ = dict(sorted(ch_exp.items()))
-            print(ch_exp)
+            # print(ch_exp)
             cola_types[cola] = ';'.join(ch_exp.values()).replace('.', ',')
         data[vol] = cola_types
     return data
@@ -185,11 +218,12 @@ def ica_preproc_last_5_sec(path, RATE, type='cola'):
             n_sec = sec.get_data().shape[1] // RATE
             # time_start = n_sec - 10
             # time_finish = n_sec - 5
-            time_start = n_sec - (n_sec // 3)
-            time_finish = time_start + 5
-            if time_finish > n_sec:
-                time_start = n_sec - 5
-                time_finish = n_sec
+            if type == 'cola':
+                time_start, time_finish = calc_time(n_sec)
+            else:
+                print('SUCCESS!')
+                time_start, time_finish = calc_time_honey_WTP(n_sec)
+
 
             # print(sec.get_data().shape, cola_times)
             # print(n_sec, time_start, time_finish)
@@ -270,11 +304,12 @@ def no_ica_last_5_sec(path, RATE, order, type='cola'):
             n_sec = sec.get_data().shape[1]// RATE
             # time_start = n_sec - 5 # ВОТ ТУТ ИЗМЕНИЛА ВРЕМЯ, БЕРЁМ ПОСЛЕДНИЕ 5 СЕКУНД!!!
             # time_finish = n_sec
-            time_start = n_sec -(n_sec // 3)
-            time_finish = time_start + 5
-            if time_finish > n_sec:
-                time_start = n_sec - 5
-                time_finish = n_sec
+            if type == 'cola':
+                time_start, time_finish = calc_time(n_sec)
+            else:
+                print('SUCCESS!')
+                time_start, time_finish = calc_time_honey_WTP(n_sec)
+
             # print(times[cola][0], times[cola][1], time_start, time_finish, n_sec)
             # print(sec.get_data().shape, cola_times)
             # print(n_sec, time_start, time_finish)
@@ -368,11 +403,11 @@ def ica_preproc_open_5_sec(path, RATE, order=[], type='cola'):
             # выбор отрезков, по которым считаем FFT
 
             n_sec = sec.get_data().shape[1]// RATE
-            time_start = n_sec - (n_sec // 3)
-            time_finish = time_start + 5
-            if time_finish > n_sec:
-                time_start = n_sec - 5
-                time_finish = n_sec
+            if type == 'cola':
+                time_start, time_finish = calc_time(n_sec)
+            else:
+                print('SUCCESS!')
+                time_start, time_finish = calc_time_honey_WTP(n_sec)
             # time_start = n_sec - 10
             # time_finish = n_sec - 5
             # print(sec.get_data().shape, cola_times)
@@ -405,7 +440,7 @@ def ica_preproc_open_5_sec(path, RATE, order=[], type='cola'):
     return data
 
 
-def no_ica_open_5_sec(path, RATE, order=[], type='cola'):
+def no_ica_open_5_sec(path, RATE, order=[], type='cola', type_honey='WTP'):
     '''
     Функция для выгрузки отчёта по эксперименту в открытую, берём с -6 по -1 секунды перед сигналом о завершении ответов на вопросы
     БЕЗ ICA преобразования
@@ -426,7 +461,11 @@ def no_ica_open_5_sec(path, RATE, order=[], type='cola'):
             times = time_range(path_time, type='open',  order=order, path_order=path_order)
         elif type == 'honey':
             print('honeeeey')
-            times = time_range_honey(path_time, type='open', order=order ,path_order=path_order )
+            times_wtp, times_taste = time_range_honey(path_time, type='open', order=order ,path_order=path_order )
+            if type_honey == ' WTP':
+                times = times_wtp
+            else:
+                times = times_taste
         print(times)
 
         cola_types = {}
@@ -455,17 +494,22 @@ def no_ica_open_5_sec(path, RATE, order=[], type='cola'):
             # выбор отрезков, по которым считаем FFT
             # пока без обобщения, у меня считается просто с -6 по -1
             n_sec = sec.get_data().shape[1]// RATE
-            time_start = n_sec - (n_sec // 3)
-            time_finish = time_start + 5
-            if time_finish > n_sec:
-                time_start = n_sec - 5
-                time_finish = n_sec
+            if type == 'cola':
+                time_start, time_finish = calc_time(n_sec)
+            else:
+                print('SUCCESS!')
+                if type_honey == 'WTP':
+                    time_start, time_finish = calc_time_honey_WTP(n_sec)
+                else:
+                    print('WE ARE COUNTING DATA FOR TASTE!!!!')
+                    time_start, time_finish = calc_time_honey_taste(n_sec)
+
             # time_start = n_sec - 10
             # time_finish = n_sec - 5
             # print(sec.get_data().shape, cola_times)
             # print(n_sec, time_start, time_finish)
             for ch_name, channel in zip(ch_names, sec.get_data()):
-                # print(channel.shape)
+                print(time_start, time_finish, n_sec, vol, times[cola][0], times[cola][1])
                 tmp = calc_fft(channel, RATE, time_start=time_start, time_finish=time_finish)
                 ch_exp[ch_name[4:] + '_a_1'] = tmp[0]
                 ch_exp[ch_name[4:] + '_b_1'] = tmp[1]

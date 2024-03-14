@@ -373,33 +373,33 @@ def parse_features_honey(folder, type='close', order=[]):
 
 
             for line in lines_about_order:
+                if line != '\n':
+                    current_honey= line.strip() # Strips the newline character
 
-                current_honey= line.strip() # Strips the newline character
-
-                file1.readline() # пропускаем строку
-                taste_dict[current_honey] = file1.readline().strip()
-                file1.readline() # пропускаем строку
-                quality_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f1_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f2_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f3_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f4_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f5_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f6_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f7_dict[current_honey] = file1.readline().strip()
-                file1.readline()  # пропускаем строку
-                f8_dict[current_honey] = file1.readline().strip()
-                file1.readline() # пропускаем строку
-                WTP_dict[current_honey] = file1.readline().strip().replace('|', '').strip()
-                file1.readline() # пропускаем строку
-                price_dict[current_honey] = file1.readline().strip().replace('|', '').strip()
+                    file1.readline() # пропускаем строку
+                    taste_dict[current_honey] = file1.readline().strip()
+                    file1.readline() # пропускаем строку
+                    quality_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f1_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f2_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f3_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f4_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f5_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f6_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f7_dict[current_honey] = file1.readline().strip()
+                    file1.readline()  # пропускаем строку
+                    f8_dict[current_honey] = file1.readline().strip()
+                    file1.readline() # пропускаем строку
+                    WTP_dict[current_honey] = file1.readline().strip().replace('|', '').strip()
+                    file1.readline() # пропускаем строку
+                    price_dict[current_honey] = file1.readline().strip().replace('|', '').strip()
 
             parsed_results[vol_name] = {
                 'taste': taste_dict,
@@ -534,7 +534,7 @@ def time_range(path_time, type='close', path_order='', order=[]):
     '''
     time_file = open(path_time, encoding="utf-8")
     if type == 'close':
-        parsed_types_close = {}  # список временных отрезков
+        parsed_times_close = {}  # список временных отрезков
         type_file = open(path_order, encoding="utf-8")
         cola_types = type_file.readlines()
 
@@ -550,16 +550,16 @@ def time_range(path_time, type='close', path_order='', order=[]):
             next_label = float(time_file.readline().split()[-1])
             cola_type = cola_types[i].rstrip()
             if cola_type in brand_check:
-                parsed_types_close[cola_type + '2'] = [label, next_label]
+                parsed_times_close[cola_type + '2'] = [label, next_label]
             else:
-                parsed_types_close[cola_type+ '1'] = [label, next_label]
+                parsed_times_close[cola_type+ '1'] = [label, next_label]
                 brand_check.add(cola_type)
 
-        return parsed_types_close
+        return parsed_times_close
 
     else:
 
-        parsed_types_open = {}
+        parsed_times_open = {}
 
         time = time_file.readlines()[26:]
         print(time)
@@ -567,12 +567,11 @@ def time_range(path_time, type='close', path_order='', order=[]):
         for i in range(0, 18, 3):
             label = float(time[i].split()[-1])
             next_label = float(time[i+1].split()[-1])
-            #print(i, i//3, label, next_label)
-            parsed_types_open[order[i//3]] = [label, next_label]
+            parsed_times_open[order[i//3]] = [label, next_label]
 
         time_file.close()
 
-        return parsed_types_open
+        return parsed_times_open
 
 
 
@@ -586,7 +585,8 @@ def time_range_honey(path_time, type='close', path_order='', order=[]):
     '''
     time_file = open(path_time, encoding="utf-8")
     if type == 'close':
-        parsed_types_close = {}  # список временных отрезков
+        parsed_times_close_WTP = {}  # список временных отрезков
+        parsed_times_close_taste = {}  # список временных отрезков
         order_file = open(path_order, encoding="utf-8")
         honey_types = order_file.readlines()
 
@@ -599,27 +599,61 @@ def time_range_honey(path_time, type='close', path_order='', order=[]):
 
         for i in range(7):
             label = float(time_file.readline().split()[-1])
-            time_file.readline()  # пропускаем метку окончания пробования
+            taste_label = float(time_file.readline().split()[-1])  # пропускаем метку окончания пробования
             next_label = float(time_file.readline().split()[-1])
             honey_type = honey_types[i].rstrip()
-            parsed_types_close[honey_type] = [label, next_label]
+            parsed_times_close_WTP[honey_type] = [label, next_label]
+            parsed_times_close_taste[honey_type] = [taste_label, next_label]
 
-        return parsed_types_close
+        return parsed_times_close_WTP, parsed_times_close_taste
 
     else:
-        parsed_types_open = {}
+        parsed_times_open_WTP = {}
+        parsed_times_open_taste = {}
 
         time = time_file.readlines()[23:]
         print(time)
         print('!!!!!!!!!!!!!!!!!!!!!!!!!!', len(time))
         for i in range(0, 27, 4):
             label = float(time[i])
-            next_label = float(time[i+3])
+            taste_label = float(time[i+1])
+            next_label = float(time[i+2])
             #print(i, i//3, label, next_label)
-            parsed_types_open[order[i//4]] = [label, next_label]
-
+            parsed_times_open_WTP[order[i//4]] = [label, next_label]
+            parsed_times_open_taste[order[i//4]] = [taste_label, next_label]
         time_file.close()
 
-        return parsed_types_open
+        return parsed_times_open_WTP, parsed_times_open_taste
 
+
+if __name__ == '__main__':
+    folder = fr'C:\Users\Анна\Desktop\EEG_Analysis\Мёд'
+    a, b = time_range_honey( path_time=fr'C:\Users\Анна\Desktop\EEG_Analysis\Мёд\DATA\Белоногова\times.txt', type='open', order=['Dedushkin_uley',
+                  'Bashkirsky',
+                  'Medovoye_razdolie',
+                  'Permskiye_pcholy',
+                  'Permskaya_fabrika',
+                  'Dalnevostochniy',
+                  'Lubomedovo'
+                  ], path_order=fr'C:\Users\Анна\Desktop\EEG_Analysis\Мёд\DATA\Белоногова\order.txt')
+
+    for k, v in a.items():
+        print(k, v)
+
+    print()
+    for k, v in b.items():
+        print(k, v)
+    #     for k1, v1 in v.items():
+    #         print(k1)
+    #         print(v1)
+
+    # vols = os.listdir(f'{folder}\DATA')
+    # for vol in vols:
+    #     f = open(f'{folder}\DATA\{vol}\order.txt', 'r')
+    #     order = f.readlines()
+    #     new = []
+    #     for i in order:
+    #         if i != "\n":
+    #             new.append(i)
+    #     print(new)
 

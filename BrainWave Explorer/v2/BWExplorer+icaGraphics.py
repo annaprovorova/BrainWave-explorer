@@ -1131,7 +1131,7 @@ if __name__ == '__main__':
 
             if event == '-NOFILTOPEN-':
                 '''выгрузка общего отчёта по ОТКРЫТОМУ эксперименту -6 по -1 сек + БЕЗ ICA'''
-                data_ica = no_ica_open_5_sec(folder, RATE, order=order_honey)
+                data_ica = no_ica_open_5_sec(folder, RATE, order=order_honey, type=type, type_honey='taste')
                 for k in final_data.keys():
                     # print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', final_data[k][0])
                     final_data[k].append(data_ica[final_data[k][0]])
